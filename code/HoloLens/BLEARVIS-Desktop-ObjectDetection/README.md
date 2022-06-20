@@ -1,4 +1,10 @@
 # Hololens YOLOv4 Object Detection
+
+This code is largely Janick's code from here: [https://github.com/Interactions-HSG/21-MT-JanickSpirig-HoloLens-ObjectDetection](https://github.com/Interactions-HSG/21-MT-JanickSpirig-HoloLens-ObjectDetection). 
+There are some adaptions concerning the Outgoing API.
+
+---
+
 With this repository you can access and evaluate the camera stream of your Microsoft Hololens to recognize at what objects the user is currently looking at. 
 The code is largely a combination of two repositories.
 - Access video-stream of Hololens PV camera: [IntelligentEdgeHOL](https://github.com/Azure/IntelligentEdgeHOL)
@@ -39,6 +45,8 @@ conda activate yolov4-gpu
 
 <img width="541" alt="Screenshot 2021-08-15 at 15 04 22" src="https://user-images.githubusercontent.com/43849960/129479546-edf3ba64-9743-4e59-96b2-e42444e83af5.png">
 
+- For custom weights additionally change the variable `layer_size = 110` to `layer_size = 108` in detector\core\utils.py (line 35) before converting them. (added by @jrstrecker)
+
 - Convert the yolo weights from darkent to TensorFlow format by executing one of the commands below in the terminal
 ```
 cd modules/YoloModule/app
@@ -57,7 +65,7 @@ Define the options in the file `config.yml` according to your needs.
 
 | Parameter  | Details |
 | ------------- | ------------- |
-| `CUSTOM`  | Defines wehter YOLOv4 has been trained for custom classes. Set to `TRUE` if you have set up YOLOv4 for custom classes |
+| `CUSTOM`  | Defines whether YOLOv4 has been trained for custom classes. Set to `TRUE` if you have set up YOLOv4 for custom classes |
 | `CUSTOM_CLASSES` | Stores the labels of all custom classes. If `CUSTOM` is set to true, list here all class labels as bullet points (use `-` and isnert line break after each label  |
 | `USE_YOLO-TINY` | Defines whether the yolo wieghts are tiny or normal ones. Set to `TRUE` if you are using tiny wieghts |
 | `VIDEO_SOURCE` | Defines the URL under which the Hololens camera stream is accessible: `https://<DEVICE-PORTAL-USER>:<DEVICE-PORTAL-PWD>@<HOLOLENS-IP>/api/holographic/stream/live.mp4?olo=true&pv=true&mic=true&loopback=true` The user and pwd are the ones you have defined when setting up the device portal. To come up with the IP address of the Hololens follow [this guide](https://docs.microsoft.com/en-us/windows/mixed-reality/develop/platform-capabilities-and-apis/using-the-windows-device-portal#connecting-over-wi-fi)  |
