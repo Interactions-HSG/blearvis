@@ -1,0 +1,15 @@
+PREFIX ex: <http://www.purl.org/oema/externalfactors/CarbonDioxide>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX units: <http://www.purl.org/oema/units/>
+PREFIX dCompanion: <https://things.interactions.ics.unisg.ch/dc#>
+PREFIX dc: <http://purl.org/dc/terms/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+​
+SELECT DISTINCT ?desc ?value ?unitLabel WHERE { 
+    ?pollutant a <http://www.purl.org/oema/externalfactors/CarbonDioxide> .
+    ?pollutant a <http://www.purl.org/oema/externalfactors/PollutantTargetValue> .
+    ?pollutant units:unitOfMeasure ?unit .
+    ?unit rdfs:label ?unitLabel .
+    ?pollutant dCompanion:value ?value .
+    ?pollutant rdfs:comment ?desc .
+} 

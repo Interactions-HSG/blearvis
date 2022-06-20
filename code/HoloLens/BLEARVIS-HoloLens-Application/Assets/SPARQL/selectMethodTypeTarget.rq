@@ -1,0 +1,24 @@
+PREFIX td: <https://www.w3.org/2019/wot/td#>
+PREFIX htv: <http://www.w3.org/2011/http#>
+PREFIX hctl: <https://www.w3.org/2019/wot/hypermedia#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX js: <https://www.w3.org/2019/wot/json-schema#>
+SELECT DISTINCT ?thingName ?method ?contentType ?target  ?schema ?propertyName ?propertyType
+WHERE { 
+    ?thing a td:Thing .
+    ?thing dc:title ?thingName .
+    ?thing td:hasInteractionAffordance ?affordance .
+	?affordance td:hasForm ?form .
+    ?form htv:methodName ?method .
+    ?form hctl:forContentType ?contentType .
+    ?form hctl:hasOperationType ?operationType .
+    ?form hctl:hasTarget ?target .
+    
+    OPTIONAL {
+        ?affordance td:hasInputSchema ?schema .
+        ?schema js:properties ?property .
+        ?property a ?propertyType .
+        ?property js:propertyName ?propertyName .
+        
+    }
+}

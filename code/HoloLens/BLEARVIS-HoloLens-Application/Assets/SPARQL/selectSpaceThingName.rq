@@ -1,0 +1,10 @@
+PREFIX td: <https://www.w3.org/2019/wot/td#>
+PREFIX bot: <https://w3id.org/bot#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+select ?spaceName ?thingName where { 
+	?s a bot:Space .
+    ?s dc:title ?spaceName .
+    ?s bot:containsElement ?thing .
+    ?thing a td:Thing .
+    ?thing dc:title ?thingName .
+}
