@@ -22,8 +22,8 @@ This paper has been submitted for publication in *Some Journal/Conference*.
 
 
 ## Abstract
-
-> Paste here the abstract.
+(Please review & revise!)
+We propose an augmented reality (AR) system that can detect and localize objects of interest. The visual object detection is maintained by a state-of-the-art and real-time approach (YOLO v4) that makes use of the front facing camera of a head-mounted display (or HMD, e.g., HoloLens 2). The localization is addressed by a transmitter (i.e., Thunderboard) that is attached to the object of interest and an antenna array (i.e., Bluetooth 5.1. receiver) that detects the angle of arrival (AOA) of the signals. The antenna array is mounted on top of the HMD. The AOA data are sent (via MQTT publish-subscribe protocol) with low latency from the antenna to a Unity app that is installed on the HMD. The system reliably localize an object even if it remains beyond the visual line of sight (BVLOS). 
 
 
 ## Software implementation
