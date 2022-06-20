@@ -36,7 +36,7 @@ public class HTTPListener : MonoBehaviour
 		listener.AuthenticationSchemes = AuthenticationSchemes.Anonymous;
 		listener.Start ();
 
-		listenerThread = new Thread (startListener);
+		listenerThread = new Thread (StartListener);
 		listenerThread.Start ();
 		Debug.Log ("Server Started");
 
@@ -54,7 +54,7 @@ public class HTTPListener : MonoBehaviour
 		} 
 	}
 
-	private void startListener ()
+	private void StartListener ()
 	{
 		while (true) {               
 			var result = listener.BeginGetContext (ListenerCallback, listener);
@@ -285,18 +285,18 @@ public class HTTPListener : MonoBehaviour
 							Debug.Log("detected card");
 
 
-							var bBoxCoordAx = int.Parse(context.Request.QueryString["coordAx"]);
-							var bBoxCoordAy = int.Parse(context.Request.QueryString["coordAy"]);
-							var bBoxCoordBx = int.Parse(context.Request.QueryString["coordBx"]);
-							var bBoxCoordBy = int.Parse(context.Request.QueryString["coordBy"]);
+							var bBoxCoordTLx = int.Parse(context.Request.QueryString["coordTLx"]);	// top left x-value
+							var bBoxCoordTLy = int.Parse(context.Request.QueryString["coordTLy"]); 
+							var bBoxCoordBRx = int.Parse(context.Request.QueryString["coordBRx"]);	// bottom right x-value
+							var bBoxCoordBRy = int.Parse(context.Request.QueryString["coordBRy"]);
 							
-							Vector2 bBoxCoordA = new Vector2(bBoxCoordAx, bBoxCoordAy);
-							Vector2 bBoxCoordB = new Vector2(bBoxCoordBx, bBoxCoordBy);
+							Vector2 bBoxCoordTL = new Vector2(bBoxCoordTLx, bBoxCoordTLy);
+							Vector2 bBoxCoordBR = new Vector2(bBoxCoordBRx, bBoxCoordBRy);
 
-							Debug.Log($"coords received: {bBoxCoordA} -- {bBoxCoordB}");
+							Debug.Log($"coords received: {bBoxCoordTL} -- {bBoxCoordBR}");
 
-							thunderboardHandlerListScript.TempBBoxCoordA = bBoxCoordA;
-							thunderboardHandlerListScript.TempBBoxCoordB = bBoxCoordB;
+							thunderboardHandlerListScript.TempBBoxCoordTL = bBoxCoordTL;
+							thunderboardHandlerListScript.TempBBoxCoordBR = bBoxCoordBR;
 							thunderboardHandlerListScript.NewYoloResultArrived = true;
 								
 							
@@ -306,15 +306,15 @@ public class HTTPListener : MonoBehaviour
 						if (value == "1")
 						{
 							Debug.Log("detected lamp");
-							var bBoxCoordAx = int.Parse(context.Request.QueryString["coordAx"]);
-							var bBoxCoordAy = int.Parse(context.Request.QueryString["coordAy"]);
-							var bBoxCoordBx = int.Parse(context.Request.QueryString["coordBx"]);
-							var bBoxCoordBy = int.Parse(context.Request.QueryString["coordBy"]);
+							var bBoxCoordTLx = int.Parse(context.Request.QueryString["coordTLx"]);  // top left x-value
+							var bBoxCoordTLy = int.Parse(context.Request.QueryString["coordTLy"]);
+							var bBoxCoordBRx = int.Parse(context.Request.QueryString["coordBRx"]);  // bottom right x-value
+							var bBoxCoordBRy = int.Parse(context.Request.QueryString["coordBRy"]);
 
-							Vector2 bBoxCoordA = new Vector2(bBoxCoordAx, bBoxCoordAy);
-							Vector2 bBoxCoordB = new Vector2(bBoxCoordBx, bBoxCoordBy);
+							Vector2 bBoxCoordTL = new Vector2(bBoxCoordTLx, bBoxCoordTLy);
+							Vector2 bBoxCoordBR = new Vector2(bBoxCoordBRx, bBoxCoordBRy);
 
-							Debug.Log($"coords received: {bBoxCoordA} -- {bBoxCoordB}");
+							Debug.Log($"coords received: {bBoxCoordTL} -- {bBoxCoordBR}");
 
 						}
 						break;
@@ -322,15 +322,15 @@ public class HTTPListener : MonoBehaviour
 						if (value == "1")
 						{
 							Debug.Log("detected mac");
-							var bBoxCoordAx = int.Parse(context.Request.QueryString["coordAx"]);
-							var bBoxCoordAy = int.Parse(context.Request.QueryString["coordAy"]);
-							var bBoxCoordBx = int.Parse(context.Request.QueryString["coordBx"]);
-							var bBoxCoordBy = int.Parse(context.Request.QueryString["coordBy"]);
+							var bBoxCoordTLx = int.Parse(context.Request.QueryString["coordTLx"]);  // top left x-value
+							var bBoxCoordTLy = int.Parse(context.Request.QueryString["coordTLy"]);
+							var bBoxCoordBRx = int.Parse(context.Request.QueryString["coordBRx"]);  // bottom right x-value
+							var bBoxCoordBRy = int.Parse(context.Request.QueryString["coordBRy"]);
 
-							Vector2 bBoxCoordA = new Vector2(bBoxCoordAx, bBoxCoordAy);
-							Vector2 bBoxCoordB = new Vector2(bBoxCoordBx, bBoxCoordBy);
+							Vector2 bBoxCoordTL = new Vector2(bBoxCoordTLx, bBoxCoordTLy);
+							Vector2 bBoxCoordBR = new Vector2(bBoxCoordBRx, bBoxCoordBRy);
 
-							Debug.Log($"coords received: {bBoxCoordA} -- {bBoxCoordB}");
+							Debug.Log($"coords received: {bBoxCoordTL} -- {bBoxCoordBR}");
 
 						}
 						break;
