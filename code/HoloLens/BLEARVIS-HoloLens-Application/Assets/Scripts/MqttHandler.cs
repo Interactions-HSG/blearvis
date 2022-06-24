@@ -29,20 +29,26 @@ using UnityEngine;
 using UnityEngine.UI;
 using uPLibrary.Networking.M2Mqtt;
 using uPLibrary.Networking.M2Mqtt.Messages;
+using M2MqttUnity;
 using System.Globalization;
 
 /// <summary>
-/// Examples for the M2MQTT library (https://github.com/eclipse/paho.mqtt.m2mqtt),
+/// Examples for the M2MQTT library (https://github.com/eclipse/paho.mqtt.m2mqtt).
+/// 
+/// Adpapted by Jannis Strecker: function DecodeMessage(). 
 /// </summary>
 namespace M2MqttUnity.Examples
 {
     /// <summary>
     /// Script for testing M2MQTT with a Unity UI
     /// </summary>
-    public class M2MqttUnityTest : M2MqttUnityClient
+    public class MqttHandler : M2MqttUnityClient
     {
+        /*
         [Tooltip("Set this to true to perform a testing cycle automatically on startup")]
         public bool autoTest = false;
+
+
         [Header("User Interface")]
         public InputField consoleInputField;
         public Toggle encryptedToggle;
@@ -52,10 +58,10 @@ namespace M2MqttUnity.Examples
         public Button disconnectButton;
         public Button testPublishButton;
         public Button clearButton;
-         
+         */
 
-        [Header("Topic")]
-        public string Topic;
+        [Header("Custom for BLEARVIS")]
+        public string MyTopic;
 
         public SceneController sceneController;
         //public ThunderboardHandler thunderboardHandler;
@@ -67,95 +73,102 @@ namespace M2MqttUnity.Examples
         private List<string> eventMessages = new List<string>();
         private bool updateUI = false;
 
-        public void TestPublish()
-        {
-            client.Publish("M2MQTT_Unity/test", System.Text.Encoding.UTF8.GetBytes("Test message"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, false);
-            Debug.Log("Test message published");
-            AddUiMessage("Test message published.");
-        }
-
-        public void SetBrokerAddress(string brokerAddress)
-        {
-            if (addressInputField && !updateUI)
-            {
-                this.brokerAddress = brokerAddress;
-            }
-        }
-
-        public void SetBrokerPort(string brokerPort)
-        {
-            if (portInputField && !updateUI)
-            {
-                int.TryParse(brokerPort, out this.brokerPort);
-            }
-        }
-
-        public void SetEncrypted(bool isEncrypted)
-        {
-            this.isEncrypted = isEncrypted;
-        }
+        /*
+       public void TestPublish()
+       {
+           client.Publish("M2MQTT_Unity/test", System.Text.Encoding.UTF8.GetBytes("Test message"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, false);
+           Debug.Log("Test message published");
+           Debug.Log("Test message published.");
+       }
 
 
-        public void SetUiMessage(string msg)
-        {
-            if (consoleInputField != null)
-            {
-                consoleInputField.text = msg;
-                updateUI = true;
-            }
-        }
+       public void SetBrokerAddress(string brokerAddress)
+       {
+           if (addressInputField && !updateUI)
+           {
+               this.brokerAddress = brokerAddress;
+           }
+       }
 
-        public void AddUiMessage(string msg)
-        {
-            if (consoleInputField != null)
-            {
-                consoleInputField.text += msg + "\n";
-                updateUI = true;
-            }
-        }
+       public void SetBrokerPort(string brokerPort)
+       {
+           if (portInputField && !updateUI)
+           {
+               int.TryParse(brokerPort, out this.brokerPort);
+           }
+       }
+
+       public void SetEncrypted(bool isEncrypted)
+       {
+           this.isEncrypted = isEncrypted;
+       }
+
+
+       public void Debug.Log(string msg)
+       {
+           if (consoleInputField != null)
+           {
+               consoleInputField.text = msg;
+               updateUI = true;
+           }
+       }
+
+       public void Debug.Log(string msg)
+       {
+           if (consoleInputField != null)
+           {
+               consoleInputField.text += msg + "\n";
+               updateUI = true;
+           }
+       }
+       */
 
         protected override void OnConnecting()
         {
             base.OnConnecting();
-            SetUiMessage("Connecting to broker on " + brokerAddress + ":" + brokerPort.ToString() + "...\n");
+            Debug.Log("Connecting to broker on " + brokerAddress + ":" + brokerPort.ToString() + "...\n");
         }
 
         protected override void OnConnected()
         {
             base.OnConnected();
-            SetUiMessage("Connected to broker on " + brokerAddress + "\n");
-
+            Debug.Log("Connected to broker on " + brokerAddress + "\n");
+            /*
             if (autoTest)
             {
                 TestPublish();
             }
+            */
         }
 
         protected override void SubscribeTopics()
         {
-            client.Subscribe(new string[] { Topic }, new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
+            client.Subscribe(new string[] { MyTopic }, new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
+            Debug.Log("Subscribed to topics.");
         }
 
         protected override void UnsubscribeTopics()
         {
-            client.Unsubscribe(new string[] { Topic });
+            client.Unsubscribe(new string[] { MyTopic });
+            Debug.Log("Unubscribed to topics.");
         }
 
         protected override void OnConnectionFailed(string errorMessage)
         {
-            AddUiMessage("CONNECTION FAILED! " + errorMessage);
+            Debug.Log("CONNECTION FAILED! " + errorMessage);
         }
 
         protected override void OnDisconnected()
         {
-            AddUiMessage("Disconnected.");
+            Debug.Log("Disconnected.");
         }
 
         protected override void OnConnectionLost()
         {
-            AddUiMessage("CONNECTION LOST!");
+            Debug.Log("CONNECTION LOST!");
         }
 
+        /*
         private void UpdateUI()
         {
             if (client == null)
@@ -203,16 +216,18 @@ namespace M2MqttUnity.Examples
             }
             updateUI = false;
         }
+        */
 
         protected override void Start()
         {
-            SetUiMessage("Ready.");
+            Debug.Log("Ready.");
             updateUI = true;
             base.Start();
         }
 
         protected override void DecodeMessage(string topic, byte[] message)
         {
+            Debug.Log("received new message");
             string msg = System.Text.Encoding.UTF8.GetString(message);
 
             if (msg == null || msg == "") return;
@@ -225,9 +240,9 @@ namespace M2MqttUnity.Examples
 
 
             }
-
-
             StoreMessage(msg);
+
+            /*
             if (topic == "M2MQTT_Unity/test")
             {
                 if (autoTest)
@@ -236,6 +251,7 @@ namespace M2MqttUnity.Examples
                     Disconnect();
                 }
             }
+            */
         }
 
 
@@ -246,7 +262,7 @@ namespace M2MqttUnity.Examples
 
         private void ProcessMessage(string msg)
         {
-            AddUiMessage("Received: " + msg);
+            Debug.Log("Received: " + msg);
         }
 
         protected override void Update()
@@ -261,10 +277,12 @@ namespace M2MqttUnity.Examples
                 }
                 eventMessages.Clear();
             }
+            /*
             if (updateUI)
             {
                 UpdateUI();
             }
+            */
         }
 
         private void OnDestroy()
@@ -274,10 +292,12 @@ namespace M2MqttUnity.Examples
 
         private void OnValidate()
         {
+            /*
             if (autoTest)
             {
                 autoConnect = true;
             }
+            */
         }
     }
 }
