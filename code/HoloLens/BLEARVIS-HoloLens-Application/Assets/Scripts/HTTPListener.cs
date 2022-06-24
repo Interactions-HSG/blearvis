@@ -74,14 +74,38 @@ public class HTTPListener : MonoBehaviour
 				var value = context.Request.QueryString.GetValues(key)[0];
 
 				Debug.Log($"key: {key}");
-				Debug.Log($"value: {value}");	
-				
+				Debug.Log($"value: {value}");
+
 				/*
 				if (key.StartsWith("coord"))
                 {
 					Debug.Log($"is coordinate");
                 }
 				*/
+				//if (key.StartsWith("https://blarvis"))
+				//{
+				if (key == "bottle" & value == "1")
+				{
+					var bBoxCoordTLx = int.Parse(context.Request.QueryString["coordTLx"]);  // top left x-value
+					var bBoxCoordTLy = int.Parse(context.Request.QueryString["coordTLy"]);
+					var bBoxCoordBRx = int.Parse(context.Request.QueryString["coordBRx"]);  // bottom right x-value
+					var bBoxCoordBRy = int.Parse(context.Request.QueryString["coordBRy"]);
+
+					Vector2 bBoxCoordTL = new Vector2(bBoxCoordTLx, bBoxCoordTLy);
+					Vector2 bBoxCoordBR = new Vector2(bBoxCoordBRx, bBoxCoordBRy);
+
+					Debug.Log($"coords received: {bBoxCoordTL} -- {bBoxCoordBR}");
+
+					thunderboardHandlerListScript.TempBBoxCoordTL = bBoxCoordTL;
+					thunderboardHandlerListScript.TempBBoxCoordBR = bBoxCoordBR;
+
+					thunderboardHandlerListScript.TempThingURI = key;
+					thunderboardHandlerListScript.NewYoloResultArrived = true;
+				}
+				//}
+				
+
+				/*
 				switch (key)
 				{	
 					case "Cherrybot":
@@ -255,7 +279,7 @@ public class HTTPListener : MonoBehaviour
 							robotInSceneHandler.tbProcessFinished = true;
 						}
 					break;
-					*/
+					/
 					case "window":
 						if (value == "1")
 						{
@@ -297,6 +321,7 @@ public class HTTPListener : MonoBehaviour
 
 							thunderboardHandlerListScript.TempBBoxCoordTL = bBoxCoordTL;
 							thunderboardHandlerListScript.TempBBoxCoordBR = bBoxCoordBR;
+							thunderboardHandlerListScript.TempThingURI = key;
 							thunderboardHandlerListScript.NewYoloResultArrived = true;
 								
 							
@@ -336,6 +361,7 @@ public class HTTPListener : MonoBehaviour
 						break;
 
 				}
+			*/
 			}
 		}
 		context.Response.Close ();

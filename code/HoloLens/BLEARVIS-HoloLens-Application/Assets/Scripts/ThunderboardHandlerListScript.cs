@@ -15,6 +15,7 @@ public class ThunderboardHandlerListScript : MonoBehaviour
 
     public Vector2 TempBBoxCoordTL = new Vector2(0, 0);
     public Vector2 TempBBoxCoordBR = new Vector2(0, 0);
+    public string TempThingURI = "";
 
     public bool NewYoloResultArrived = false;
 
@@ -31,31 +32,14 @@ public class ThunderboardHandlerListScript : MonoBehaviour
         {
             if (TempBBoxCoordTL != new Vector2(0, 0) && TempBBoxCoordBR != new Vector2(0, 0))
             {
-                HandleIncomingYoloResult(TempBBoxCoordTL, TempBBoxCoordBR);
+                HandleIncomingYoloResult(TempBBoxCoordTL, TempBBoxCoordBR, TempThingURI);
                 TempBBoxCoordTL = new Vector2(0, 0);
                 TempBBoxCoordBR = new Vector2(0, 0);
+                TempThingURI = "";
             }
             NewYoloResultArrived = false;
         }
     }
-
-    public ThunderboardHandler ReturnThunderboardHandlerFromListIfExists(string correctTBHandlerID)
-    {
-        Debug.Log($"correctTBHandlerID: {correctTBHandlerID}");
-        ThunderboardHandler returnValue = null;
-        if (thunderboardHandlerList == null) return null;
-        foreach (ThunderboardHandler tbh in thunderboardHandlerList)
-        {
-            Debug.Log($"this tbh: {tbh.thunderboardID}");
-            if (tbh.thunderboardID == null) return null;
-            if (tbh.thunderboardID == correctTBHandlerID)
-            {
-                returnValue = tbh;
-            }
-        }
-        return returnValue;
-    }
-
 
 
     // ------------------------------------------ Incoming Data ----------------------------------------------------------------
@@ -84,7 +68,7 @@ public class ThunderboardHandlerListScript : MonoBehaviour
 
         if (tbh == null)
         {
-            var newPosition = GetPositionFromAngle(newAngle);
+            var newPosition = CalculatePositionFromAngle(newAngle);
             tbh = GetClosestTBHForMQTTResult(newPosition);
 
             if (tbh == null)
@@ -104,31 +88,31 @@ public class ThunderboardHandlerListScript : MonoBehaviour
     /// <summary>
     /// Handles an Incoming Yolo result. The two boundingbox coordinate pairs are attached to a new/existing thunderboardHandler.
     /// </summary>
-    /// <param name="bBoxCoordA"></param>
-    /// <param name="bBoxCoordB"></param>
-    public void HandleIncomingYoloResult(Vector2 bBoxCoordA, Vector2 bBoxCoordB)
+    /// <param name="bBoxCoordTL">top left</param>
+    /// <param name="bBoxCoordBR">bottom right</param>
+    public void HandleIncomingYoloResult(Vector2 bBoxCoordTL, Vector2 bBoxCoordBR, string thingURI)
     {
         string log = "--- HandleIncomingYoloResult ---";
 
 
-        var bBoxWorldCoordA = ScreenToWorldPointRaycast(bBoxCoordA);
-        var bBoxWorldCoordB = ScreenToWorldPointRaycast(bBoxCoordB);
+        var bBoxWorldCoordTL = Camera.main.ScreenToWorldPoint(bBoxCoordTL);
+        var bBoxWorldCoordBR = Camera.main.ScreenToWorldPoint(bBoxCoordBR);
+        log += $"\nbBoxWorldCoordA: {bBoxWorldCoordTL}";
+        log += $"\nbBoxWorldCoordB: {bBoxWorldCoordBR}";
 
-        
 
-        var matchingTBH = GetClosestTBHForYoloResult(bBoxWorldCoordA, bBoxWorldCoordB);
+        var matchingTBH = GetClosestTBHForYoloResult(bBoxWorldCoordTL, bBoxWorldCoordBR, thingURI);
 
         if (matchingTBH == null)
         {
-            log += $"\nno matching TB found or no TB in list.";
-            log += "\nTBH did not exist, creating one";
+            log += $"\nno matching TB found or no TB in list. creating one.";
             var newPrefabInstance = Instantiate(thunderboardInfoBoxPrefab, new Vector3(0, 0, 0), Quaternion.identity);
             matchingTBH = newPrefabInstance.GetComponent<ThunderboardHandler>();
-            matchingTBH.thunderboardID = "undefined";
+            matchingTBH.ThunderboardID = "undefined";
             thunderboardHandlerList.Add(matchingTBH);
         }
 
-        matchingTBH.UpdateCoordinatesFromYolo(bBoxCoordA, bBoxCoordB, bBoxWorldCoordA, bBoxWorldCoordB);
+        matchingTBH.UpdateParametersFromYoloResult(bBoxCoordTL, bBoxCoordBR, bBoxWorldCoordTL, bBoxWorldCoordBR, thingURI);
 
 
         log += "\n--- HandleIncomingYoloResult --- done ---";
@@ -145,11 +129,11 @@ public class ThunderboardHandlerListScript : MonoBehaviour
     /// </summary>
     /// <param name="angle"></param>
     /// <returns>calculated position in world space</returns>
-    private Vector3 GetPositionFromAngle(float angle)
+    public Vector3 CalculatePositionFromAngle(float angle)
     {
 
         var newPosition = new Vector3(0, 0, 1);
-
+        string log = "--- CalculatePositionFromAngle --";
         // tan(angle) = x/y
         // -> x = tan(angle) * y
         // z = 1
@@ -166,14 +150,26 @@ public class ThunderboardHandlerListScript : MonoBehaviour
          *  |a/
          *  |/ 
          */
-        var newX = Mathf.Tan(Mathf.Deg2Rad * angle);
-        //var newXCircle = Mathf.Cos(Mathf.Deg2Rad * (angleFloat + 90));
-        //var newZCircle = Mathf.Sin(Mathf.Deg2Rad * (angleFloat + 90));
-
-
+        // only x-value:
         // negate because +90 is on left and -90 is on right of receiver
-        newPosition.x = -newX;
+        //var newX = Mathf.Tan(Mathf.Deg2Rad * angle);
 
+        // x- and z-value. keeps the info box on a circle around the HL2.
+        var newXCircle = Mathf.Cos(Mathf.Deg2Rad * (angle + 90));
+        var newZCircle = Mathf.Sin(Mathf.Deg2Rad * (angle + 90));
+
+        newPosition.x = newXCircle;
+        newPosition.z = newZCircle;
+        log += $"newPosition: {newPosition}";
+
+        var curCameraPosition = Camera.main.transform.position;
+        log += $"curCameraPosition: {curCameraPosition}";
+
+        var newPosPlusCam = newPosition + curCameraPosition;
+        log += $"newPosition +camPos: {newPosPlusCam}";
+
+        log += "--- CalculatePositionFromAngle --- end ---";
+        Debug.Log(log);
         return newPosition;
     }
 
@@ -183,7 +179,7 @@ public class ThunderboardHandlerListScript : MonoBehaviour
     /// <param name="bBoxWorldCoordA"></param>
     /// <param name="bBoxWorldCoordB"></param>
     /// <returns></returns>
-    public ThunderboardHandler GetClosestTBHForYoloResult(Vector3 bBoxWorldCoordA, Vector3 bBoxWorldCoordB)
+    public ThunderboardHandler GetClosestTBHForYoloResult(Vector3 bBoxWorldCoordA, Vector3 bBoxWorldCoordB, string thingUri)
     {
         var minDistanceFromExistingTBsCenter = Mathf.Infinity;
         ThunderboardHandler matchingTBH = null;
@@ -192,16 +188,17 @@ public class ThunderboardHandlerListScript : MonoBehaviour
         
         foreach (ThunderboardHandler tbh in thunderboardHandlerList)
         {
-            log += $"\nid: {tbh.thunderboardID}";
-            Vector2 newInterpolatedPositionBBox = Vector2.Lerp(bBoxWorldCoordA, bBoxWorldCoordB, 0.5f);
+            log += $"\nid: {tbh.ThunderboardID}";
+            Vector2 centerBBox = Vector2.Lerp(bBoxWorldCoordA, bBoxWorldCoordB, 0.5f);
 
-            Vector2 curTBPos = new Vector2(tbh.thunderboardPositionInWorldCoords.x, tbh.thunderboardPositionInWorldCoords.y);
+            Vector2 curTBPos = new Vector2(tbh.ThunderboardInfoBoxPositionInWorldCoords.x, tbh.ThunderboardInfoBoxPositionInWorldCoords.y);
             
-            var dist = Vector2.Distance(curTBPos, newInterpolatedPositionBBox);
+            var dist = Vector2.Distance(curTBPos, centerBBox);
 
             Rect boundingBox = new Rect(bBoxWorldCoordA, bBoxWorldCoordB);
 
-            if (dist < minDistanceFromExistingTBsCenter || boundingBox.Contains(tbh.thunderboardPositionInWorldCoords))
+            // || boundingBox.Contains(tbh.ThunderboardInfoBoxPositionInWorldCoords
+            if (thingUri == tbh.ThingURI && (dist < minDistanceFromExistingTBsCenter))
             {
                 log += $"\nfound new closest TBH";
                 matchingTBH = tbh;
@@ -209,8 +206,8 @@ public class ThunderboardHandlerListScript : MonoBehaviour
                
             }
                 
-            log += $"\nsaved pos: {tbh.thunderboardPositionInWorldCoords}";
-            log += $"\nnew interpolated pos: {newInterpolatedPositionBBox}";
+            log += $"\nsaved pos: {tbh.ThunderboardInfoBoxPositionInWorldCoords}";
+            log += $"\nnew interpolated pos: {centerBBox}";
             log += $"\ndist: {dist}";
             
         }
@@ -234,14 +231,14 @@ public class ThunderboardHandlerListScript : MonoBehaviour
 
         foreach (ThunderboardHandler tbh in thunderboardHandlerList)
         {
-            log += $"\nid: {tbh.thunderboardID}";
+            log += $"\nid: {tbh.ThunderboardID}";
             Vector2 newInterpolatedPositionBBox = Vector2.Lerp(tbh.BBoxWorldCoordTL, tbh.BBoxWorldCoordBR, 0.5f);
 
             //Vector2 curTBPos = new Vector2(tbh.thunderboardPositionInWorldCoords.x, tbh.thunderboardPositionInWorldCoords.y);
 
             var dist = Vector2.Distance(newPosition, newInterpolatedPositionBBox);
 
-            Rect boundingBox = new(tbh.BBoxWorldCoordTL, tbh.BBoxWorldCoordBR);
+            Rect boundingBox = new Rect(tbh.BBoxWorldCoordTL, tbh.BBoxWorldCoordBR);
 
             if (dist < minDistanceFromExistingTBsCenter || boundingBox.Contains(newPosition))
             {
@@ -251,7 +248,7 @@ public class ThunderboardHandlerListScript : MonoBehaviour
 
             }
 
-            log += $"\nsaved pos: {tbh.thunderboardPositionInWorldCoords}";
+            log += $"\nsaved pos: {tbh.ThunderboardInfoBoxPositionInWorldCoords}";
             log += $"\nnew interpolated pos: {newInterpolatedPositionBBox}";
             log += $"\ndist: {dist}";
 
@@ -267,18 +264,52 @@ public class ThunderboardHandlerListScript : MonoBehaviour
     /// <summary>
     /// Converts a screen space vector2 to a world space vector2 by raycasting.
     /// </summary>
-    /// <param name="sp"></param>
+    /// <param name="newPos"></param>
     /// <returns></returns>
-    public Vector3 ScreenToWorldPointRaycast(Vector2 sp)
+    public Vector3 ScreenToWorldPointRaycast(Vector2 newPos)
     {
         var tc = Camera.main.transform;
-        Vector3 newPosinWorldCoord = Camera.main.ScreenToWorldPoint(sp);
-        newPosinWorldCoord.z = 0;
+        string log = "--- ScreenToWorldPointRaycast ---";
 
-        RaycastHit hit;
+        //1280x720
+        // following this paper "Augmented Reality Controlled Smart Wheelchair Using Dynamic Signifiers for Affordance Representation"
+        // chacon-quesada2019
+        // https://doi.org/10.1109/IROS40897.2019.8968290
+        var newX = (2 * newPos.x / 1280f) - 1;
+        var newY = (-2 * newPos.y / 720) + 1;
+        // pixel in normalised device coordinates (ndc)
+        var pndc = new Vector4(newX, newY, 1, 1);
+        log += $"\nin normalised device coordinates: {pndc}";
+        var Mproj = Camera.main.previousViewProjectionMatrix;
 
-        if (Physics.Raycast(newPosinWorldCoord, tc.TransformDirection(Vector3.forward), out hit))
+        // pixel in the camera coordinate system
+        var pc =  Mproj.inverse.MultiplyVector(pndc);
+        log += $"\nin camera coordinates: {pc}";
+
+        var Mworld = Camera.main.cameraToWorldMatrix;
+        // pixel in application coordinate system (aka world coordinates)
+        var pworld = Mworld.MultiplyVector(pc);
+        log += $"\nin app coordinates: {pworld}";
+
+        Vector3 newPosinWorldCoord = Camera.main.ScreenToWorldPoint(newPos);
+        log += $"\nresult from ScreenToWorldPoint: {newPosinWorldCoord}";
+
+        var curCameraPosition = Camera.main.transform.position;
+        log += $"\ncurCameraPosition: {curCameraPosition}";
+
+        var plusCamPos = newPosinWorldCoord + curCameraPosition;
+        log += $"\nplusCamPos: {plusCamPos}";
+
+
+        Ray ray = Camera.main.ScreenPointToRay(newPos);
+        if (Physics.Raycast(newPosinWorldCoord, tc.TransformDirection(Vector3.forward), out RaycastHit hit))
+        //if (Physics.Raycast(pworld, Vector3.forward, out RaycastHit hit))
+        //if (Physics.Raycast(ray, out RaycastHit hit))
         {
+            log += "\nhit point";
+            log += "\n--- ScreenToWorldPointRaycast --- end ---";
+            
+            Debug.Log(log);
             return hit.point;
         }
         /*
@@ -288,10 +319,28 @@ public class ThunderboardHandlerListScript : MonoBehaviour
             return hitPoint;
         }
         */
+        log += "\n--- ScreenToWorldPointRaycast --- end ---";
+        Debug.Log(log);
         return new Vector3(0, 0, 0);
 
     }
 
+    public ThunderboardHandler ReturnThunderboardHandlerFromListIfExists(string correctTBHandlerID)
+    {
+        Debug.Log($"correctTBHandlerID: {correctTBHandlerID}");
+        ThunderboardHandler returnValue = null;
+        if (thunderboardHandlerList == null) return null;
+        foreach (ThunderboardHandler tbh in thunderboardHandlerList)
+        {
+            Debug.Log($"this tbh: {tbh.ThunderboardID}");
+            if (tbh.ThunderboardID == null) return null;
+            if (tbh.ThunderboardID == correctTBHandlerID)
+            {
+                returnValue = tbh;
+            }
+        }
+        return returnValue;
+    }
 
 
     // ------------------------------------------ Experimental !!!!!! -------------------------------------------------------------

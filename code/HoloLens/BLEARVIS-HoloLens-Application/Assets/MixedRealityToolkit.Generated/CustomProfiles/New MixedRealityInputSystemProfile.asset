@@ -29,13 +29,6 @@ MonoBehaviour:
     runtimePlatform: 7
     deviceManagerProfile: {fileID: 0}
   - componentType:
-      reference: Microsoft.MixedReality.Toolkit.Input.UnityInput.UnityJoystickManager,
-        Microsoft.MixedReality.Toolkit
-    componentName: Unity Joystick Manager
-    priority: 0
-    runtimePlatform: -1
-    deviceManagerProfile: {fileID: 0}
-  - componentType:
       reference: Microsoft.MixedReality.Toolkit.Input.UnityInput.UnityTouchDeviceManager,
         Microsoft.MixedReality.Toolkit
     componentName: Unity Touch Device Manager
@@ -90,17 +83,21 @@ MonoBehaviour:
     runtimePlatform: 9
     deviceManagerProfile: {fileID: 0}
   - componentType:
-      reference: Microsoft.MixedReality.Toolkit.XRSDK.Oculus.Input.OculusXRSDKDeviceManager,
-        Microsoft.MixedReality.Toolkit.Providers.XRSDK.Oculus
-    componentName: XR SDK Oculus Device Manager
-    priority: 0
-    runtimePlatform: 33
-    deviceManagerProfile: {fileID: 11400000, guid: 8f48cb9c26fb518499c65c9f9e8bb4ed,
-      type: 2}
-  - componentType:
       reference: Microsoft.MixedReality.Toolkit.XRSDK.OpenXR.OpenXRDeviceManager,
         Microsoft.MixedReality.Toolkit.Providers.OpenXR
     componentName: OpenXR XRSDK Device Manager
+    priority: 0
+    runtimePlatform: -1
+    deviceManagerProfile: {fileID: 0}
+  - componentType:
+      reference: Microsoft.MixedReality.Toolkit.XRSDK.Input.XRSDKDeviceManager, Microsoft.MixedReality.Toolkit.Providers.XRSDK
+    componentName: XR SDK Device Manager
+    priority: 0
+    runtimePlatform: 15
+    deviceManagerProfile: {fileID: 0}
+  - componentType:
+      reference: 
+    componentName: New data provider 12
     priority: 0
     runtimePlatform: -1
     deviceManagerProfile: {fileID: 0}

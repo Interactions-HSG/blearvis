@@ -5,11 +5,16 @@ using System.Globalization;
 using TMPro;
 using UnityEngine;
 
+/// <summary>
+/// This script is attached to one ThunderboardInfoBox. 
+/// It handles the incoming data for one specific thunderboard.
+/// </summary>
 public class ThunderboardHandler : MonoBehaviour
 {
     [Header("UI Elements")]
     public GameObject ThunderboardInfoBox;
 
+    public GameObject ThingURIText;
     public GameObject IDText;
     public GameObject AngleText;
     public GameObject SensorText;
@@ -25,13 +30,12 @@ public class ThunderboardHandler : MonoBehaviour
     [Header("Parameters")]
     public Vector2 BBoxPixelCoordTL = new Vector2(0,0);
     public Vector2 BBoxPixelCoordBR = new Vector2(0,0);
-
     public Vector2 BBoxWorldCoordTL = new Vector3(0, 0, 0);
     public Vector2 BBoxWorldCoordBR = new Vector3(0, 0, 0);
-
     public float Angle = 0.0f;
-    public string thunderboardID;
-    public Vector3 thunderboardPositionInWorldCoords = new Vector3(0, 0, 0);
+    public string ThunderboardID;
+    public string ThingURI;
+    public Vector3 ThunderboardInfoBoxPositionInWorldCoords = new Vector3(0, 0, 0);
 
 
     public bool SetNewPositionFromAngle = false;
@@ -47,9 +51,6 @@ public class ThunderboardHandler : MonoBehaviour
             var allTBHScripts = GameObject.FindGameObjectsWithTag("TBHList");
             thunderboardHandlerListScript = allTBHScripts[0].GetComponent<ThunderboardHandlerListScript>();
         }
-
-        
-      
         
     }
 
@@ -58,11 +59,11 @@ public class ThunderboardHandler : MonoBehaviour
     {
         if (SetNewPositionFromAngle)
         {            
-            SetNewPositionThunderboardFromAngle();
+            SetNewPositionThunderboardInfoBoxFromAngle();
             SetNewPositionFromAngle = false;
         } else if(SetNewPositionFromBBox)
         {
-            SetNewPositionThunderboardFromBBoxCoords();
+            SetNewPositionThunderboardInfoBoxFromBBoxCoords();
             SetNewPositionFromBBox = false;
         }
     }
@@ -75,7 +76,7 @@ public class ThunderboardHandler : MonoBehaviour
     public void UpdateFromMQTTMessage(float msg, string id)
     {
         Angle = msg;
-        thunderboardID = id;
+        ThunderboardID = id;
         SetIDText();
         SetNewPositionFromAngle = true;
         SetSensorText();
@@ -85,18 +86,21 @@ public class ThunderboardHandler : MonoBehaviour
     /// <summary>
     /// Receives Coordinates from the YOLO result. These are saved in this ThunderboardHandler's fields.
     /// </summary>
-    /// <param name="pixelA"></param>
-    /// <param name="pixelB"></param>
-    /// <param name="worldA"></param>
-    /// <param name="worldB"></param>
-    public void UpdateCoordinatesFromYolo(Vector2 pixelA, Vector2 pixelB, Vector3 worldA, Vector3 worldB)
+    /// <param name="pixelTL"></param>
+    /// <param name="pixelBR"></param>
+    /// <param name="worldTL"></param>
+    /// <param name="worldBR"></param>
+    /// <param name="thingURI"></param>
+    public void UpdateParametersFromYoloResult(Vector2 pixelTL, Vector2 pixelBR, Vector3 worldTL, Vector3 worldBR, string thingURI)
     {
-        BBoxPixelCoordTL = pixelA;
-        BBoxPixelCoordBR = pixelB;
-        BBoxWorldCoordTL = worldA;
-        BBoxWorldCoordBR = worldB;
-        SetCoordiantesText(pixelA, pixelB, worldA, worldB);
+        BBoxPixelCoordTL = pixelTL;
+        BBoxPixelCoordBR = pixelBR;
+        BBoxWorldCoordTL = worldTL;
+        BBoxWorldCoordBR = worldBR;
+        ThingURI = thingURI;
         SetNewPositionFromBBox = true;
+        SetThingURIText();
+        SetCoordiantesText();
         SetIDText();
         ThunderboardInfoBox.SetActive(true);
     }
@@ -107,25 +111,38 @@ public class ThunderboardHandler : MonoBehaviour
     /// <summary>
     /// Updates the ThunderboardInfoBox's position based on the bounding box coordinates from YOLO.
     /// </summary>
-    public void SetNewPositionThunderboardFromBBoxCoords()
+    public void SetNewPositionThunderboardInfoBoxFromBBoxCoords()
     {
-        string log = $"--- SetNewPositionThunderboardFromBBoxCoords ---";
+        string log = $"--- SetNewPositionThunderboardInfoBoxFromBBoxCoords ---";
 
         var newX = BBoxWorldCoordTL.x + (BBoxWorldCoordBR.x - BBoxWorldCoordTL.x) /2f;
         var newY = BBoxWorldCoordTL.y + (BBoxWorldCoordTL.y - BBoxWorldCoordBR.y) /4f;
 
-        var newPositionInfoBox = new Vector3(newX, newY, thunderboardPositionInWorldCoords.z);
+        Vector2 centerBBox = Vector2.Lerp(BBoxPixelCoordTL, BBoxPixelCoordBR, 0.5f);
+        var newPosFromRay = thunderboardHandlerListScript.ScreenToWorldPointRaycast(centerBBox);
+        //var newZ = thunderboardHandlerListScript.ScreenToWorldPointRaycast(centerBBox).z;
+        // keep the InfoBox at least 0.5m away from the user
+        // newZ = (newZ <= 0.5f) ? 0.5f : newZ;
+        var newZ  = (newPosFromRay.z < 0.5) ? 0.5f : newPosFromRay.z;
+        newPosFromRay.z = newZ;
+          //var newPositionInfoBox = new Vector3(newX, newY, newZ);
 
-        var thunderboardTransform = ThunderboardInfoBox.GetComponent<Transform>();
-        var curPosition = thunderboardTransform.position;
+          var thunderboardInfoBoxTransform = ThunderboardInfoBox.GetComponent<Transform>();
+        var curPosition = thunderboardInfoBoxTransform.position;
         log += $"\ncurPosition: {curPosition}";
-        log += $"\nnewPosition: {newPositionInfoBox}";
+        log += $"\nnewPosition: {newPosFromRay}";
 
-        thunderboardPositionInWorldCoords = newPositionInfoBox;
-        thunderboardTransform.position = newPositionInfoBox;
+        if (newZ > 1)
+        {
+            log += $"\nz > 1: {newZ}";
+            thunderboardInfoBoxTransform.localScale = new Vector3(newZ, newZ, newZ);
+        }
+
+        ThunderboardInfoBoxPositionInWorldCoords = newPosFromRay;
+        thunderboardInfoBoxTransform.position = newPosFromRay;
 
         SetPositionText();
-        log += $"\n--- SetNewPositionThunderboardFromBBoxCoords --- end ---";
+        log += $"\n--- SetNewPositionThunderboardInfoBoxFromBBoxCoords --- end ---";
         Debug.Log(log);
     }
 
@@ -134,29 +151,32 @@ public class ThunderboardHandler : MonoBehaviour
     /// <summary>
     /// Updates the ThunderboardInfoBox's position based on the received angle of arrival from this thunderboard.
     /// </summary>
-    public void SetNewPositionThunderboardFromAngle()
+    public void SetNewPositionThunderboardInfoBoxFromAngle()
     {
         try
         {
-            string log = $"--- SetNewPositionThunderboardFromAngle ---";
+            string log = $"--- SetNewPositionThunderboardInfoBoxFromAngle ---";
 
-            var newPosition = CalculatePositionFromAngle(Angle);
+            var newPosition = thunderboardHandlerListScript.CalculatePositionFromAngle(Angle);
 
             Debug.Log($"new angle: {Angle} --- newX: {newPosition.x}");
 
-            var thunderboardTransform = ThunderboardInfoBox.GetComponent<Transform>();
-            var curPosition = thunderboardTransform.position;
+            var thunderboardInfoBoxTransform = ThunderboardInfoBox.GetComponent<Transform>();
+            var curPosition = thunderboardInfoBoxTransform.position;
             log += $"\ncurPosition: {curPosition}";
 
 
             log += $"\nnew Position: {newPosition}";
-            thunderboardPositionInWorldCoords = newPosition;
-            thunderboardTransform.position = newPosition;
+            ThunderboardInfoBoxPositionInWorldCoords = newPosition;
+            thunderboardInfoBoxTransform.position = newPosition;
+
+            var newRotation = CalculateRotationFromAngle(Angle);
+            thunderboardInfoBoxTransform.rotation = newRotation;
             
             SetPositionText();
             SetAngleText();
 
-            log += $"--- SetNewPositionThunderboardFromAngle --- end ---";
+            log += $"--- SetNewPositionThunderboardInfoBoxFromAngle --- end ---";
             Debug.Log(log);
 
         } catch (Exception e)
@@ -166,28 +186,25 @@ public class ThunderboardHandler : MonoBehaviour
         
     }
 
+    
 
     /// <summary>
-    /// Updates the "bounding box coordinates" text in the ThunderboardInfoBox
+    ///  Updates the "Thunderboard ID" text in the ThunderboardInfoBox
     /// </summary>
-    /// <param name="bBoxCoordA"></param>
-    /// <param name="bBoxCoordB"></param>
-    /// <param name="worldCoordA"></param>
-    /// <param name="worldCoordB"></param>
-    public void SetCoordiantesText(Vector2 bBoxCoordA, Vector2 bBoxCoordB, Vector3 worldCoordA, Vector3 worldCoordB)
+    public void SetThingURIText()
     {
-        var coords = $"BBox Coordinates:<space=3.5em> {bBoxCoordA} and {bBoxCoordB}";
-        coords += $"\nWorld Coordinates:<space=3em> {worldCoordA} and {worldCoordB}";
-        CoordinatesText.GetComponent<TextMeshPro>().text = coords;
+        var thingURIT = $"Thing URI:<space=3em> {ThingURI} ";
+        ThingURIText.GetComponent<TextMeshPro>().text = thingURIT;
     }
 
+
     /// <summary>
-    ///  Updates the "position" text in the ThunderboardInfoBox
+    ///  Updates the "Thunderboard ID" text in the ThunderboardInfoBox
     /// </summary>
-    public void SetPositionText()
+    public void SetIDText()
     {
-        var coords = $"Position:<space=7.4em> {thunderboardPositionInWorldCoords} ";
-        PositionText.GetComponent<TextMeshPro>().text = coords;
+        var idT = $"ID:<space=10em> {ThunderboardID} ";
+        IDText.GetComponent<TextMeshPro>().text = idT;
     }
 
     /// <summary>
@@ -200,12 +217,21 @@ public class ThunderboardHandler : MonoBehaviour
     }
 
     /// <summary>
-    ///  Updates the "Thunderboard ID" text in the ThunderboardInfoBox
+    ///  Updates the "position" text in the ThunderboardInfoBox
     /// </summary>
-    public void SetIDText()
+    public void SetPositionText()
     {
-        var idT = $"ID:<space=10em> {thunderboardID} ";
-        IDText.GetComponent<TextMeshPro>().text = idT;
+        var coords = $"Position:<space=7.4em> {ThunderboardInfoBoxPositionInWorldCoords} ";
+        PositionText.GetComponent<TextMeshPro>().text = coords;
+    }
+    /// <summary>
+    /// Updates the "bounding box coordinates" text in the ThunderboardInfoBox
+    /// </summary>
+    public void SetCoordiantesText()
+    {
+        var coords = $"BBox Pixel Coordinates:<space=1.5em> {BBoxPixelCoordTL} and {BBoxPixelCoordBR}";
+        coords += $"\nBBox World Coordinates:<space=2em> {BBoxWorldCoordTL} and {BBoxWorldCoordBR}";
+        CoordinatesText.GetComponent<TextMeshPro>().text = coords;
     }
 
     /// <summary>
@@ -213,10 +239,11 @@ public class ThunderboardHandler : MonoBehaviour
     /// </summary>
     public void SetSensorText()
     {
-        var text = $"Current Temperature:<space=1.5em> {Mathf.Round(UnityEngine.Random.Range(15f,35f) *100f)/100f} °C";
+        var text = $"Sensor Value:<space=2em> {Mathf.Round(UnityEngine.Random.Range(15f,35f) *100f)/100f} °C";
         SensorText.GetComponent<TextMeshPro>().text = text;
     }
 
+    /*
     /// <summary>
     /// Calculate a new position from an angle.
     /// </summary>
@@ -224,7 +251,7 @@ public class ThunderboardHandler : MonoBehaviour
     /// <returns></returns>
     public Vector3 CalculatePositionFromAngle(float angle)
     {
-
+        string log = "--- CalculatePositionFromAngle ---";
         var newPosition = new Vector3(0, 0, 1);
 
         // tan(angle) = x/y
@@ -242,17 +269,39 @@ public class ThunderboardHandler : MonoBehaviour
          *  |  /
          *  |a/
          *  |/ 
-         */
+         ///
+        // only x-value:
+        // negate because +90 is on left and -90 is on right of receiver
         //var newX = Mathf.Tan(Mathf.Deg2Rad * angle);
+
+        // x- and z-value. keeps the info box on a circle around the HL2.
         var newXCircle = Mathf.Cos(Mathf.Deg2Rad * (angle + 90));
         var newZCircle = Mathf.Sin(Mathf.Deg2Rad * (angle + 90));
 
-
-        // negate because +90 is on left and -90 is on right of receiver
         newPosition.x = newXCircle;
         newPosition.z = newZCircle;
+        log += $"newPosition: {newPosition}";
+
+        var curCameraPosition = Camera.main.transform.position;
+        log += $"curCameraPosition: {curCameraPosition}";
+
+        var newPosPlusCam = newPosition + curCameraPosition;
+        log += $"newPosition +camPos: {newPosPlusCam}";
+
+
+
+
+        log += "--- CalculatePositionFromAngle --- end ---";
+        Debug.Log(log);
 
         return newPosition;
+    }
+*/
+
+    public Quaternion CalculateRotationFromAngle(float angle)
+    {
+        // negate because +90 is on left and -90 is on right of receiver
+        return Quaternion.Euler(0, -angle, 0);
     }
 
     /// <summary>
@@ -261,7 +310,7 @@ public class ThunderboardHandler : MonoBehaviour
     /// <param name="InfoBox"></param>
     public void RemoveInfoBox(GameObject InfoBox)
     {
-        thunderboardHandlerListScript.thunderboardHandlerList.RemoveAll(tbh => tbh.thunderboardID == thunderboardID);
+        thunderboardHandlerListScript.thunderboardHandlerList.RemoveAll(tbh => tbh.ThunderboardID == ThunderboardID);
         InfoBox.SetActive(false);
         Destroy(InfoBox);
     }

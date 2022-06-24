@@ -17,7 +17,7 @@ class APIHandler:
 
         if self.statusHandler.statuses[thing] != display:
             
-            url = "{}/?{}={}&coordAx={}&coordAy={}&coordBx={}&coordBy={}".format(self.holo_url, urllib.parse.quote(thing), str(display), str(int(coord1[0])), str(int(coord1[1])), str(int(coord2[0])), str(int(coord2[1])))
+            url = "{}/?{}={}&coordTLx={}&coordTLy={}&coordBRx={}&coordBRy={}".format(self.holo_url, urllib.parse.quote(thing), str(display), str(int(coord1[0])), str(int(coord1[1])), str(int(coord2[0])), str(int(coord2[1])))
             print(url)
             
             # only send request to hololens if thing is there
