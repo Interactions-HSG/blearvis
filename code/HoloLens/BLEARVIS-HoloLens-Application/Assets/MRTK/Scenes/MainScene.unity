@@ -4465,6 +4465,144 @@ Transform:
   m_Father: {fileID: 322761109}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &256615094
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 751685883744937855, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 29
+      objectReference: {fileID: 0}
+    - target: {fileID: 751685883744937855, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 751685883744937855, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 751685883744937855, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 751685883744937855, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 751685883744937855, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 751685883744937855, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 751685883744937855, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 751685883744937855, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 751685883744937855, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 751685883744937855, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 751685883744937855, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 751685883744937855, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 751685883744937855, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1017117139351085740, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_Name
+      value: WelcomeBox
+      objectReference: {fileID: 0}
+    - target: {fileID: 3691605400661216942, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_text
+      value: 'Please press the button on a thunderboard or use YOLO to detect it.
+
+        Then
+        its Info Box should be visible at (approx.) the Thunderboards position.'
+      objectReference: {fileID: 0}
+    - target: {fileID: 6438629092679645685, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_text
+      value: OK, got it.
+      objectReference: {fileID: 0}
+    - target: {fileID: 7507412556499342866, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: m_text
+      value: Welcome to the BLEARVIS prototype!
+      objectReference: {fileID: 0}
+    - target: {fileID: 8766546828693673598, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8766546828693673598, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8766546828693673598, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 256615095}
+    - target: {fileID: 8766546828693673598, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: SetActive
+      objectReference: {fileID: 0}
+    - target: {fileID: 8766546828693673598, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgument
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 8766546828693673598, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+        type: 3}
+      propertyPath: OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: dd83a14aaabbfc841b2ca3ec1f819b74, type: 3}
+--- !u!1 &256615095 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1017117139351085740, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
+    type: 3}
+  m_PrefabInstance: {fileID: 256615094}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &261343725
 GameObject:
   m_ObjectHideFlags: 0
@@ -7196,6 +7334,10 @@ MonoBehaviour:
   SetYButton: {fileID: 0}
   GlobalTbhYValue: 0
   GlobalTbhZValue: 1
+  TempBBoxCoordTL: {x: 0, y: 0}
+  TempBBoxCoordBR: {x: 0, y: 0}
+  TempThingURI: 
+  NewYoloResultArrived: 0
 --- !u!1 &419599762 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1017117139351085740, guid: dd83a14aaabbfc841b2ca3ec1f819b74,
@@ -7624,144 +7766,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 470776339}
   m_Mesh: {fileID: 4300010, guid: b566bbce04d66f4428421e81a3af0299, type: 3}
---- !u!1001 &475334930
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 972520988, guid: 184450d7fd18e3742b0612f6901efe5e, type: 3}
-      propertyPath: persistentKeywords
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336335196203188, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_Mesh
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336335196203210, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_textAlignment
-      value: 65535
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336335196203210, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_VerticalAlignment
-      value: 512
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336335196203210, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_HorizontalAlignment
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336335412807318, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_Mesh
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336335412807400, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_textAlignment
-      value: 65535
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336335412807400, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_VerticalAlignment
-      value: 512
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336335412807400, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_HorizontalAlignment
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336335719039536, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_textAlignment
-      value: 65535
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336335719039536, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_VerticalAlignment
-      value: 512
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336335719039536, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_HorizontalAlignment
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336335719039566, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_Mesh
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336336052702772, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 29
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336336052702772, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336336052702772, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336336052702772, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336336052702772, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336336052702772, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336336052702772, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336336052702772, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336336052702772, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336336052702772, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336336052702772, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336336052702775, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_Name
-      value: HandMenu_Small_HideOnHandDrop
-      objectReference: {fileID: 0}
-    - target: {fileID: 4650336336052702775, guid: 184450d7fd18e3742b0612f6901efe5e,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 184450d7fd18e3742b0612f6901efe5e, type: 3}
 --- !u!1 &483354641
 GameObject:
   m_ObjectHideFlags: 0
@@ -10913,7 +10917,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 605910115}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d3434b5204f950541a6ea345763ce41c, type: 3}
+  m_Script: {fileID: 11500000, guid: b04b4d4c221d37d4faf2f150e5ba8de7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   brokerAddress: aoapi.local
@@ -10924,16 +10928,7 @@ MonoBehaviour:
   autoConnect: 1
   mqttUserName: 
   mqttPassword: 
-  autoTest: 0
-  consoleInputField: {fileID: 0}
-  encryptedToggle: {fileID: 0}
-  addressInputField: {fileID: 0}
-  portInputField: {fileID: 0}
-  connectButton: {fileID: 0}
-  disconnectButton: {fileID: 0}
-  testPublishButton: {fileID: 0}
-  clearButton: {fileID: 0}
-  Topic: estimator/angle/#
+  MyTopic: '#'
   sceneController: {fileID: 1688913113}
   thunderboardInfoBoxPrefab: {fileID: 6255741003881863841, guid: 232950cd9fd42e24e8ead650212b9d85,
     type: 3}
@@ -13317,6 +13312,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ThunderboardInfoBox: {fileID: 0}
+  ThingURIText: {fileID: 0}
   IDText: {fileID: 0}
   AngleText: {fileID: 0}
   SensorText: {fileID: 0}
@@ -13324,13 +13320,14 @@ MonoBehaviour:
   CoordinatesText: {fileID: 0}
   thunderboardInfoBoxPrefab: {fileID: 0}
   thunderboardHandlerListScript: {fileID: 0}
-  BBoxPixelCoordA: {x: 0, y: 0}
-  BBoxPixelCoordB: {x: 0, y: 0}
-  BBoxWorldCoordA: {x: 0, y: 0}
-  BBoxWorldCoordB: {x: 0, y: 0}
+  BBoxPixelCoordTL: {x: 0, y: 0}
+  BBoxPixelCoordBR: {x: 0, y: 0}
+  BBoxWorldCoordTL: {x: 0, y: 0}
+  BBoxWorldCoordBR: {x: 0, y: 0}
   Angle: 0
-  thunderboardID: 
-  thunderboardPositionInWorldCoords: {x: 0, y: 0, z: 0}
+  ThunderboardID: 
+  ThingURI: 
+  ThunderboardInfoBoxPositionInWorldCoords: {x: 0, y: 0, z: 0}
   SetNewPositionFromAngle: 0
   SetNewPositionFromBBox: 0
 --- !u!4 &789322381 stripped
@@ -30923,7 +30920,6 @@ MonoBehaviour:
   authenticator: {fileID: 1818981126}
   robotInSceneHandler: {fileID: 714215251}
   labLightHandler: {fileID: 1606536739}
-  thunderboardHandler: {fileID: 749718356}
   thunderboardHandlerListScript: {fileID: 395525679}
 --- !u!1 &1914653834
 GameObject:
