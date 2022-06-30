@@ -127,7 +127,7 @@ public class ThunderboardHandler : MonoBehaviour
         newPosFromRay.z = newZ;
           //var newPositionInfoBox = new Vector3(newX, newY, newZ);
 
-          var thunderboardInfoBoxTransform = ThunderboardInfoBox.GetComponent<Transform>();
+        var thunderboardInfoBoxTransform = ThunderboardInfoBox.GetComponent<Transform>();
         var curPosition = thunderboardInfoBoxTransform.position;
         log += $"\ncurPosition: {curPosition}";
         log += $"\nnewPosition: {newPosFromRay}";

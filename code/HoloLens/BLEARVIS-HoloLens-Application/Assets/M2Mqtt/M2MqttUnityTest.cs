@@ -57,7 +57,6 @@ namespace M2MqttUnity.Examples
         [Header("Topic")]
         public string Topic;
 
-        public SceneController sceneController;
         //public ThunderboardHandler thunderboardHandler;
 
         public GameObject thunderboardInfoBoxPrefab;

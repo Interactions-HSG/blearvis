@@ -35,7 +35,7 @@ using System.Globalization;
 /// <summary>
 /// Examples for the M2MQTT library (https://github.com/eclipse/paho.mqtt.m2mqtt).
 /// 
-/// Adpapted by Jannis Strecker: function DecodeMessage(). 
+/// Adpapted by Jannis Strecker. 
 /// </summary>
 namespace M2MqttUnity.Examples
 {
@@ -44,26 +44,10 @@ namespace M2MqttUnity.Examples
     /// </summary>
     public class MqttHandler : M2MqttUnityClient
     {
-        /*
-        [Tooltip("Set this to true to perform a testing cycle automatically on startup")]
-        public bool autoTest = false;
-
-
-        [Header("User Interface")]
-        public InputField consoleInputField;
-        public Toggle encryptedToggle;
-        public InputField addressInputField;
-        public InputField portInputField;
-        public Button connectButton;
-        public Button disconnectButton;
-        public Button testPublishButton;
-        public Button clearButton;
-         */
-
+        
         [Header("Custom for BLEARVIS")]
         public string MyTopic;
 
-        public SceneController sceneController;
         //public ThunderboardHandler thunderboardHandler;
 
         public GameObject thunderboardInfoBoxPrefab;
@@ -71,57 +55,7 @@ namespace M2MqttUnity.Examples
         
 
         private List<string> eventMessages = new List<string>();
-        private bool updateUI = false;
-
-        /*
-       public void TestPublish()
-       {
-           client.Publish("M2MQTT_Unity/test", System.Text.Encoding.UTF8.GetBytes("Test message"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, false);
-           Debug.Log("Test message published");
-           Debug.Log("Test message published.");
-       }
-
-
-       public void SetBrokerAddress(string brokerAddress)
-       {
-           if (addressInputField && !updateUI)
-           {
-               this.brokerAddress = brokerAddress;
-           }
-       }
-
-       public void SetBrokerPort(string brokerPort)
-       {
-           if (portInputField && !updateUI)
-           {
-               int.TryParse(brokerPort, out this.brokerPort);
-           }
-       }
-
-       public void SetEncrypted(bool isEncrypted)
-       {
-           this.isEncrypted = isEncrypted;
-       }
-
-
-       public void Debug.Log(string msg)
-       {
-           if (consoleInputField != null)
-           {
-               consoleInputField.text = msg;
-               updateUI = true;
-           }
-       }
-
-       public void Debug.Log(string msg)
-       {
-           if (consoleInputField != null)
-           {
-               consoleInputField.text += msg + "\n";
-               updateUI = true;
-           }
-       }
-       */
+      
 
         protected override void OnConnecting()
         {
@@ -168,60 +102,11 @@ namespace M2MqttUnity.Examples
             Debug.Log("CONNECTION LOST!");
         }
 
-        /*
-        private void UpdateUI()
-        {
-            if (client == null)
-            {
-                if (connectButton != null)
-                {
-                    connectButton.interactable = true;
-                    disconnectButton.interactable = false;
-                    testPublishButton.interactable = false;
-                }
-            }
-            else
-            {
-                if (testPublishButton != null)
-                {
-                    testPublishButton.interactable = client.IsConnected;
-                }
-                if (disconnectButton != null)
-                {
-                    disconnectButton.interactable = client.IsConnected;
-                }
-                if (connectButton != null)
-                {
-                    connectButton.interactable = !client.IsConnected;
-                }
-            }
-            if (addressInputField != null && connectButton != null)
-            {
-                addressInputField.interactable = connectButton.interactable;
-                addressInputField.text = brokerAddress;
-            }
-            if (portInputField != null && connectButton != null)
-            {
-                portInputField.interactable = connectButton.interactable;
-                portInputField.text = brokerPort.ToString();
-            }
-            if (encryptedToggle != null && connectButton != null)
-            {
-                encryptedToggle.interactable = connectButton.interactable;
-                encryptedToggle.isOn = isEncrypted;
-            }
-            if (clearButton != null && connectButton != null)
-            {
-                clearButton.interactable = connectButton.interactable;
-            }
-            updateUI = false;
-        }
-        */
+        
 
         protected override void Start()
         {
             Debug.Log("Ready.");
-            updateUI = true;
             base.Start();
         }
 
@@ -241,17 +126,6 @@ namespace M2MqttUnity.Examples
 
             }
             StoreMessage(msg);
-
-            /*
-            if (topic == "M2MQTT_Unity/test")
-            {
-                if (autoTest)
-                {
-                    autoTest = false;
-                    Disconnect();
-                }
-            }
-            */
         }
 
 
@@ -277,12 +151,7 @@ namespace M2MqttUnity.Examples
                 }
                 eventMessages.Clear();
             }
-            /*
-            if (updateUI)
-            {
-                UpdateUI();
-            }
-            */
+            
         }
 
         private void OnDestroy()
@@ -290,14 +159,6 @@ namespace M2MqttUnity.Examples
             Disconnect();
         }
 
-        private void OnValidate()
-        {
-            /*
-            if (autoTest)
-            {
-                autoConnect = true;
-            }
-            */
-        }
+        
     }
 }
