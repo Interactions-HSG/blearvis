@@ -43,7 +43,7 @@ RenderSettings:
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 11
+  serializedVersion: 12
   m_GIWorkflowMode: 1
   m_GISettings:
     serializedVersion: 2
@@ -98,7 +98,7 @@ LightmapSettings:
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
-  m_UseShadowmask: 1
+  m_LightingSettings: {fileID: 0}
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -118,6 +118,8 @@ NavMeshSettings:
     manualTileSize: 0
     tileSize: 256
     accuratePlacement: 0
+    maxJobWorkers: 0
+    preserveTilesOutsideBounds: 0
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
@@ -477,7 +479,6 @@ MonoBehaviour:
   mqttUserName: 
   mqttPassword: 
   MyTopic: '#'
-  sceneController: {fileID: 0}
   thunderboardInfoBoxPrefab: {fileID: 6255741003881863841, guid: 232950cd9fd42e24e8ead650212b9d85,
     type: 3}
   thunderboardHandlerListScript: {fileID: 395525679}
@@ -818,10 +819,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1148f3ad422a74847a6953d2f75847cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sceneController: {fileID: 0}
-  hueController: {fileID: 0}
-  curtainsController: {fileID: 0}
-  authenticator: {fileID: 0}
-  robotInSceneHandler: {fileID: 0}
-  labLightHandler: {fileID: 0}
   thunderboardHandlerListScript: {fileID: 395525679}
