@@ -34,7 +34,7 @@ class Detector:
         self.config = config = ConfigProto()
         self.config.gpu_options.allow_growth = True
         self.session = InteractiveSession(config=config)
-        self.input_size = 416
+        self.input_size = 416   # was 416
         self.framework = framework
         self.model = model
         self.custom = custom
@@ -52,8 +52,10 @@ class Detector:
             if self.tiny:
                 self.weights = 'detector/checkpoints/custom-tiny-416'
             else:
-                self.weights = 'detector/checkpoints/custom-416'
-        
+                self.weights = 'detector/checkpoints/custom-416'   # was custom-416
+                # self.weights = 'detector/checkpoints/custom-608'
+                # print("path with 608")
+
         if self.framework == 'tflite':
             self.interpreter = tf.lite.Interpreter(model_path=self.weights)
             self.interpreter.allocate_tensors()
@@ -110,5 +112,6 @@ class Detector:
         pred_bbox = [boxes.numpy(), scores.numpy(), classes.numpy(), valid_detections.numpy()]
         
         detections, image, coord1, coord2 = utils.draw_bbox(frame, pred_bbox)
+        print(f"detections: {detections}")
         
         return detections, image, coord1, coord2

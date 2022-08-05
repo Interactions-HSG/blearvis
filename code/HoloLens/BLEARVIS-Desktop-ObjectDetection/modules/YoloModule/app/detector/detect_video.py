@@ -17,7 +17,7 @@ from tensorflow.compat.v1 import InteractiveSession
 flags.DEFINE_string('framework', 'tf', '(tf, tflite, trt')
 flags.DEFINE_string('weights', './checkpoints/yolov4-416',
                     'path to weights file')
-flags.DEFINE_integer('size', 416, 'resize images to')
+flags.DEFINE_integer('size', 416, 'resize images to')  # was 416
 flags.DEFINE_boolean('tiny', False, 'yolo or yolo-tiny')
 flags.DEFINE_string('model', 'yolov4', 'yolov3 or yolov4')
 flags.DEFINE_string('video', './data/video/video.mp4', 'path to input video or set to 0 for webcam')

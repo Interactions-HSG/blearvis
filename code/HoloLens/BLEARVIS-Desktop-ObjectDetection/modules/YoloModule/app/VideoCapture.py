@@ -73,7 +73,7 @@ class VideoCapture(object):
             print("   - HololensUrl      : " + str(holo_url))
         print("")
 
-        self.yoloInference = Detector(tiny=self.tiny, custom=self.custom) # yolov4
+        self.yoloInference = Detector(tiny=self.tiny, custom=self.custom)  # yolov4
 
         if self.custom:
             self.apiHandler = APIHandler(holo_url, self.custom_classes)
@@ -88,7 +88,7 @@ class VideoCapture(object):
 
     def __IsRtsp(self, videoPath):
         try:
-            if 'rtsp:' in videoPath.lower() or '/api/holographic/stream' in videoPath.lower(): #or '0' in videoPath:
+            if 'rtsp:' in videoPath.lower() or '/api/holographic/stream' in videoPath.lower():  # or '0' in videoPath:
                 return True
         except ValueError:
             return False
@@ -184,9 +184,9 @@ class VideoCapture(object):
         '''
         # check if stream is opened
         if self.useStream:
-            print("Stream is opnened {}".format(self.vStream.stream.isOpened()))
+            print("Stream is opened {}".format(self.vStream.stream.isOpened()))
         elif self.useWebcam:
-            print("Stream is opnened {}".format(self.vCapture.isOpened()))
+            print("Stream is opened {}".format(self.vCapture.isOpened()))
         '''
 
         # Check camera's FPS
@@ -300,20 +300,26 @@ class VideoCapture(object):
                                 
                                 # when thing is not of interest to us
                                 except KeyError:
+                                    print("KeyError")
+                                    print("Object: {}".format(classLabel))
+                                    print("Confidence: {}".format(confidence))
                                     pass
+
 
                 # build the new queue element
                 try:
                     if len(queue_list) > 0:
                         # made some detections
-                        #print("made some detections ---------------------------------------------------------------------- +++++++++++++++++++++++++++++++ ---------------------------------")
+                        # print("made some detections ---------------------------------------------------------------------- +++++++++++++++++++++++++++++++ ---------------------------------")
                         detections_queue.append(queue_list)
                         queue_list = []
                     else:
                         # confidence too low or no detections at all
+                        print("confidence too low or no detections at all")
                         detections_queue.append(["NaN"])
                 except NameError:
                     # no detections at all
+                    print("no detections at all")
                     detections_queue.append(["NaN"])
                          
                 # calculate new first element of queue

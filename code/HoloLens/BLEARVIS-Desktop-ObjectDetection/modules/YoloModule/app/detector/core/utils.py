@@ -32,8 +32,8 @@ def load_weights(model, weights_file, model_name='yolov4', is_tiny=False):
             layer_size = 75
             output_pos = [58, 66, 74]
         else:
-            layer_size = 110
-            # layer_size = 108      # USE THIS for custom weights!!!!!!!!!!!!!!!!!!!!!
+            # layer_size = 110
+            layer_size = 108      # USE THIS for custom weights!!!!!!!!!!!!!!!!!!!!! 108 for 5 classes, 106 for 4
             output_pos = [93, 101, 109]
     wf = open(weights_file, 'rb')
     major, minor, revision, seen, _ = np.fromfile(wf, dtype=np.int32, count=5)
