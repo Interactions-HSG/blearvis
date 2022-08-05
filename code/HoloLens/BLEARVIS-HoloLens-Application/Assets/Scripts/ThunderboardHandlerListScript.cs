@@ -19,6 +19,8 @@ public class ThunderboardHandlerListScript : MonoBehaviour
 
     public bool NewYoloResultArrived = false;
 
+    private string pointMode = "world";
+
     // Start is called before the first frame update
     void Start()
     {
@@ -75,6 +77,8 @@ public class ThunderboardHandlerListScript : MonoBehaviour
             {
                 Debug.Log("TBH did not exist, creating one");
                 var newPrefabInstance = Instantiate(thunderboardInfoBoxPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+                newPrefabInstance.transform.localRotation = Quaternion.identity;
+                newPrefabInstance.transform.localScale = new Vector3(1, 1, 1);
                 tbh = newPrefabInstance.GetComponent<ThunderboardHandler>();
                 thunderboardHandlerList.Add(tbh);
             }
@@ -107,6 +111,8 @@ public class ThunderboardHandlerListScript : MonoBehaviour
         {
             log += $"\nno matching TB found or no TB in list. creating one.";
             var newPrefabInstance = Instantiate(thunderboardInfoBoxPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+            newPrefabInstance.transform.localRotation = Quaternion.identity;
+            newPrefabInstance.transform.localScale = new Vector3(1, 1, 1);
             matchingTBH = newPrefabInstance.GetComponent<ThunderboardHandler>();
             matchingTBH.ThunderboardID = "undefined";
             thunderboardHandlerList.Add(matchingTBH);
@@ -260,6 +266,14 @@ public class ThunderboardHandlerListScript : MonoBehaviour
     }
 
 
+    public void SetPointMode(string newMode)
+    {
+        pointMode = newMode;
+        Debug.Log($"PointMode has changed: {pointMode}");
+    }
+
+
+
 
     /// <summary>
     /// Converts a screen space vector2 to a world space vector2 by raycasting.
@@ -268,7 +282,7 @@ public class ThunderboardHandlerListScript : MonoBehaviour
     /// <returns></returns>
     public Vector3 ScreenToWorldPointRaycast(Vector2 newPos)
     {
-        var tc = Camera.main.transform;
+        var cameraTransform = Camera.main.transform;
         string log = "--- ScreenToWorldPointRaycast ---";
 
         //1280x720
@@ -280,20 +294,33 @@ public class ThunderboardHandlerListScript : MonoBehaviour
         // pixel in normalised device coordinates (ndc)
         var pndc = new Vector4(newX, newY, 1, 1);
         log += $"\nin normalised device coordinates: {pndc}";
-        var Mproj = Camera.main.previousViewProjectionMatrix;
+        var Mproj = Camera.main.projectionMatrix;
 
-        // pixel in the camera coordinate system
-        var pc =  Mproj.inverse.MultiplyVector(pndc);
+        // position in the camera coordinate system
+        //var pc =  Mproj.inverse.MultiplyVector(pndc);
+        var Mproji = Mproj.inverse;
+        var pc = Mproji.MultiplyPoint(pndc);
         log += $"\nin camera coordinates: {pc}";
 
         var Mworld = Camera.main.cameraToWorldMatrix;
-        // pixel in application coordinate system (aka world coordinates)
-        var pworld = Mworld.MultiplyVector(pc);
+        // position in application coordinate system (aka world coordinates)
+        var pworld = Mworld.MultiplyPoint(pc);
         log += $"\nin app coordinates: {pworld}";
+
+        // position of the camera in the camera coordinate system
+        var ocam = new Vector4(0, 0, 0, 1);
+        // position of the camera in the world coordinate system
+        var oworld = Mworld.MultiplyPoint(ocam);
+        log += $"\norigin in world coordinates: {oworld}";
+
+
 
         Vector3 newPosinWorldCoord = Camera.main.ScreenToWorldPoint(newPos);
         log += $"\nresult from ScreenToWorldPoint: {newPosinWorldCoord}";
 
+
+
+        
         var curCameraPosition = Camera.main.transform.position;
         log += $"\ncurCameraPosition: {curCameraPosition}";
 
@@ -301,8 +328,25 @@ public class ThunderboardHandlerListScript : MonoBehaviour
         log += $"\nplusCamPos: {plusCamPos}";
 
 
+
+        Vector3 raycastDirection = new Vector3(0,0,0);
+        if (pointMode == "app")
+        {
+            raycastDirection = pworld;
+        } else if (pointMode == "cameraPos")
+        {
+            raycastDirection = plusCamPos;
+        } else
+        {
+            raycastDirection = newPosinWorldCoord;
+        }
+        log += $"\nraycastStart: {raycastDirection}";
+
         Ray ray = Camera.main.ScreenPointToRay(newPos);
-        if (Physics.Raycast(newPosinWorldCoord, tc.TransformDirection(Vector3.forward), out RaycastHit hit))
+        if (Physics.Raycast(oworld, raycastDirection, out RaycastHit hit))
+        //if (Physics.Raycast(raycastDirection, oworld, out RaycastHit hit))
+        //if (Physics.Raycast(raycastStart, cameraTransform.forward, out RaycastHit hit))
+        //if (Physics.Raycast(pworld, tc.TransformDirection(Vector3.forward), out RaycastHit hit))
         //if (Physics.Raycast(pworld, Vector3.forward, out RaycastHit hit))
         //if (Physics.Raycast(ray, out RaycastHit hit))
         {

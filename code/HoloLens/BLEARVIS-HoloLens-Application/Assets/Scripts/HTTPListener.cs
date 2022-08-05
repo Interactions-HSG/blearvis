@@ -72,7 +72,7 @@ public class HTTPListener : MonoBehaviour
 				// https://blarvis.interactions.ics.unisg.ch/card
 				// https://blarvis.interactions.ics.unisg.ch/lamp
 				// https://blarvis.interactions.ics.unisg.ch/mac
-				if (key == "bottle" & value == "1")
+				if (key.StartsWith("https://blarvis") & value == "1")
 				{
 					var bBoxCoordTLx = int.Parse(context.Request.QueryString["coordTLx"]);  // top left x-value
 					var bBoxCoordTLy = int.Parse(context.Request.QueryString["coordTLy"]);

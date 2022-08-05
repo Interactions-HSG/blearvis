@@ -135,7 +135,8 @@ public class ThunderboardHandler : MonoBehaviour
         if (newZ > 1)
         {
             log += $"\nz > 1: {newZ}";
-            thunderboardInfoBoxTransform.localScale = new Vector3(newZ, newZ, newZ);
+            var newScale =  (newZ > 3) ? 3 : newZ;
+            thunderboardInfoBoxTransform.localScale = new Vector3(newScale, newScale, newScale);
         }
 
         ThunderboardInfoBoxPositionInWorldCoords = newPosFromRay;
