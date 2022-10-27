@@ -51,7 +51,7 @@ namespace M2MqttUnity.Examples
         //public ThunderboardHandler thunderboardHandler;
 
         public GameObject thunderboardInfoBoxPrefab;
-        public ThunderboardHandlerListScript thunderboardHandlerListScript;
+        public ThunderboardHandlerList thunderboardHandlerListScript;
         
 
         private List<string> eventMessages = new List<string>();
@@ -136,7 +136,7 @@ namespace M2MqttUnity.Examples
 
         private void ProcessMessage(string msg)
         {
-            Debug.Log("Received: " + msg);
+            //Debug.Log("Received: " + msg);
         }
 
         protected override void Update()

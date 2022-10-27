@@ -10,7 +10,7 @@ public class HTTPListener : MonoBehaviour
 	private HttpListener listener;
 	private Thread listenerThread;
 	//public ThunderboardHandler thunderboardHandler;
-	public ThunderboardHandlerListScript thunderboardHandlerListScript;
+	public ThunderboardHandlerList thunderboardHandlerListScript;
 
 	
 
@@ -22,6 +22,7 @@ public class HTTPListener : MonoBehaviour
 		
 		//listener.Prefixes.Add("http://10.2.1.85:5050/"); // labnet lab
 		listener.Prefixes.Add("http://10.2.2.172:5050/"); // labnet office
+		//listener.Prefixes.Add("http://10.2.2.167:5050/"); // labnet office
 		//listener.Prefixes.Add("http://localhost:5050/"); // labnet office
 
 		listener.AuthenticationSchemes = AuthenticationSchemes.Anonymous;
@@ -35,7 +36,7 @@ public class HTTPListener : MonoBehaviour
 		if (thunderboardHandlerListScript == null)
 		{
 			var allTBHScripts = GameObject.FindGameObjectsWithTag("TBHList");
-			thunderboardHandlerListScript = allTBHScripts[0].GetComponent<ThunderboardHandlerListScript>();
+			thunderboardHandlerListScript = allTBHScripts[0].GetComponent<ThunderboardHandlerList>();
 		} 
 	}
 

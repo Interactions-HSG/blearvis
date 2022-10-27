@@ -25,7 +25,8 @@ public class ThunderboardHandler : MonoBehaviour
     public GameObject thunderboardInfoBoxPrefab;
 
     [Header("Scripts")]
-    public ThunderboardHandlerListScript thunderboardHandlerListScript;
+    public ThunderboardHandlerList thunderboardHandlerListScript;
+    public PositionHandler PositionHandler;
 
     [Header("Parameters")]
     public Vector2 BBoxPixelCoordTL = new Vector2(0,0);
@@ -36,6 +37,7 @@ public class ThunderboardHandler : MonoBehaviour
     public string ThunderboardID;
     public string ThingURI;
     public Vector3 ThunderboardInfoBoxPositionInWorldCoords = new Vector3(0, 0, 0);
+    private float lastAngleDifference;
 
 
     public bool SetNewPositionFromAngle = false;
@@ -45,13 +47,18 @@ public class ThunderboardHandler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        lastAngleDifference = 0;
         // there is only one thunderboardHandlerListScript in the scene
         if (thunderboardHandlerListScript == null)
         {
             var allTBHScripts = GameObject.FindGameObjectsWithTag("TBHList");
-            thunderboardHandlerListScript = allTBHScripts[0].GetComponent<ThunderboardHandlerListScript>();
+            thunderboardHandlerListScript = allTBHScripts[0].GetComponent<ThunderboardHandlerList>();
         }
-        
+        if (PositionHandler == null)
+        {
+            var allTBHScripts = GameObject.FindGameObjectsWithTag("PositionHandler");
+            PositionHandler = allTBHScripts[0].GetComponent<PositionHandler>();
+        }
     }
 
     // Update is called once per frame
@@ -75,9 +82,27 @@ public class ThunderboardHandler : MonoBehaviour
     /// <param name="id">the ID from the thunderboard that has sent the message</param>
     public void UpdateFromMQTTMessage(float msg, string id)
     {
+        var currentAngle = Angle;
+        var curAngleDiff = Math.Abs(Angle - msg);
+        Debug.Log($"curAngle: {currentAngle}, newAngle: {msg}, diff: {curAngleDiff}");
+
+        /*
+        //  curAngle: 6.17, newAngle: -68.12, last diff: 54.29
+        // curAngle: 6.17, newAngle: -70.05, cur diff: 76.22
+        if (curAngleDiff > 10 && Math.Abs(lastAngleDifference - curAngleDiff) > 10)
+        {
+            Debug.Log("not setting new angle, diff > 10");
+            SetIDText();
+            SetSensorText();
+            return;
+        }
+        //*/
+        lastAngleDifference = curAngleDiff;
         Angle = msg;
         ThunderboardID = id;
         SetIDText();
+        SetAngleText();
+        SetPositionText();
         SetNewPositionFromAngle = true;
         SetSensorText();
     }
@@ -119,7 +144,7 @@ public class ThunderboardHandler : MonoBehaviour
         var newY = BBoxWorldCoordTL.y + (BBoxWorldCoordTL.y - BBoxWorldCoordBR.y) /4f;
 
         Vector2 centerBBox = Vector2.Lerp(BBoxPixelCoordTL, BBoxPixelCoordBR, 0.5f);
-        var newPosFromRay = thunderboardHandlerListScript.ScreenToWorldPointRaycast(centerBBox);
+        var newPosFromRay = PositionHandler.ScreenToWorldPointRaycast(centerBBox);
         //var newZ = thunderboardHandlerListScript.ScreenToWorldPointRaycast(centerBBox).z;
         // keep the InfoBox at least 0.5m away from the user
         // newZ = (newZ <= 0.5f) ? 0.5f : newZ;
@@ -140,7 +165,7 @@ public class ThunderboardHandler : MonoBehaviour
         }
 
         ThunderboardInfoBoxPositionInWorldCoords = newPosFromRay;
-        thunderboardInfoBoxTransform.position = newPosFromRay;
+        thunderboardInfoBoxTransform.position = new Vector3(curPosition.x, curPosition.y, newPosFromRay.z);
 
         SetPositionText();
         log += $"\n--- SetNewPositionThunderboardInfoBoxFromBBoxCoords --- end ---";
@@ -156,9 +181,10 @@ public class ThunderboardHandler : MonoBehaviour
     {
         try
         {
+            
             string log = $"--- SetNewPositionThunderboardInfoBoxFromAngle ---";
 
-            var newPosition = thunderboardHandlerListScript.CalculatePositionFromAngle(Angle);
+            var newPosition = PositionHandler.CalculatePositionFromAngle(Angle);
 
             Debug.Log($"new angle: {Angle} --- newX: {newPosition.x}");
 
@@ -169,10 +195,13 @@ public class ThunderboardHandler : MonoBehaviour
 
             log += $"\nnew Position: {newPosition}";
             ThunderboardInfoBoxPositionInWorldCoords = newPosition;
-            thunderboardInfoBoxTransform.position = newPosition;
+            thunderboardInfoBoxTransform.position = new Vector3(newPosition.x, newPosition.y, newPosition.z);
 
-            var newRotation = CalculateRotationFromAngle(Angle);
-            thunderboardInfoBoxTransform.rotation = newRotation;
+            var newRotation = CalculateRotationFromAngle(thunderboardInfoBoxTransform, Angle);
+            //thunderboardInfoBoxTransform.LookAt(Camera.main.transform);
+            //var n = Camera.main.transform.position - thunderboardInfoBoxTransform.position;
+       
+            thunderboardInfoBoxTransform.localRotation = newRotation;
             
             SetPositionText();
             SetAngleText();
@@ -299,10 +328,29 @@ public class ThunderboardHandler : MonoBehaviour
     }
 */
 
-    public Quaternion CalculateRotationFromAngle(float angle)
+    public Quaternion CalculateRotationFromAngle(Transform tbT, float angle)
     {
         // negate because +90 is on left and -90 is on right of receiver
-        return Quaternion.Euler(0, -angle, 0);
+
+        tbT.LookAt(Camera.main.transform.position, Camera.main.transform.up);
+        var newYRotation = tbT.rotation.y;
+
+        if (angle < 0)
+        {
+            newYRotation = -newYRotation;
+        }
+        var rotation = new Quaternion(0, newYRotation , 0, 1);
+
+
+
+
+        if (Camera.main.transform.position.z < 0)
+        {
+            Debug.Log($"Camera.main.transform.position.z: {Camera.main.transform.position.z}");
+            angle = 180 - angle;
+        }
+        //Quaternion.Euler(0, angle, 0);
+        return Quaternion.Euler(0, angle, 0);
     }
 
     /// <summary>
