@@ -1,3 +1,5 @@
+﻿using Microsoft.MixedReality.Toolkit.UI;
+using Microsoft.MixedReality.Toolkit.Utilities.Solvers;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,18 +7,36 @@ using UnityEngine;
 public class PositionHandler : MonoBehaviour
 {
 
-    public ThunderboardHandlerList thunderboardHandlerListScript;
+    public ThunderboardHandlerList thunderboardHandlerList;
+
+    [Header("Yolo Frame Dimensions")]
+    public bool NewYoloFrameDimensions;
+    public int YoloFrameWidth;
+    public int YoloFrameHeight;
+
+    [Header("Simulated Camera to get 3d points of 2d points from Yolov4.")]
+    [Tooltip("Simulates camera from HL2. From ARETT.")]
+    public Camera HL2Camera;
+    public RenderTexture HL2CameraRenderTexture;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        Debug.Log("Pixel width :" + HL2Camera.pixelWidth + " Pixel height : " + HL2Camera.pixelHeight);
+        NewYoloFrameDimensions = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        if (NewYoloFrameDimensions)
+        {
+            Debug.Log($"Yolo Pixel width : {YoloFrameWidth} Yolo Pixel height : {YoloFrameHeight}");
+            HL2CameraRenderTexture.width = YoloFrameWidth;
+            HL2CameraRenderTexture.height = YoloFrameHeight;
+            Debug.Log($"Camera Pixel width : {HL2Camera.pixelWidth} Camera Pixel height : {HL2Camera.pixelHeight}");
+            NewYoloFrameDimensions = false;
+        }
     }
 
 
@@ -25,7 +45,7 @@ public class PositionHandler : MonoBehaviour
     /// </summary>
     /// <param name="angle"></param>
     /// <returns>calculated position in world space</returns>
-    public Vector3 CalculatePositionFromAngle(float angle)
+    public Vector3 CalculateLocalOffsetFromAngle(float angle)
     {
 
         var newPosition = new Vector3(0, 0, 1);
@@ -34,7 +54,7 @@ public class PositionHandler : MonoBehaviour
         // -> x = tan(angle) * y
         // z = 1
         // a = angleFloat
-        // b = 90�
+        // b = 90°
         /*
          *     x
          *  ________
@@ -84,7 +104,7 @@ public class PositionHandler : MonoBehaviour
 
         log += "\n--- CalculatePositionFromAngle --- end ---";
         Debug.Log(log);
-        return newPosPlusCamTimesRot;
+        return newPosition;
     }
 
 
@@ -95,6 +115,7 @@ public class PositionHandler : MonoBehaviour
     /// <returns></returns>
     public Vector3 ScreenToWorldPointRaycast(Vector2 newPos)
     {
+        /* ----------------- ↓ PROBABLY NOT needed anymore ↓ ------------------------------- */
         var cameraTransform = Camera.main.transform;
         string log = "--- ScreenToWorldPointRaycast ---";
 
@@ -143,11 +164,11 @@ public class PositionHandler : MonoBehaviour
 
 
         Vector3 raycastDirection = new Vector3(0, 0, 0);
-        if (thunderboardHandlerListScript.pointMode == "app")
+        if (thunderboardHandlerList.pointMode == "app")
         {
             raycastDirection = pworld;
         }
-        else if (thunderboardHandlerListScript.pointMode == "cameraPos")
+        else if (thunderboardHandlerList.pointMode == "cameraPos")
         {
             raycastDirection = plusCamPos;
         }
@@ -157,14 +178,23 @@ public class PositionHandler : MonoBehaviour
         }
         log += $"\nraycastStart: {raycastDirection}";
 
-        Ray ray = Camera.main.ScreenPointToRay(newPos);
-        Debug.DrawRay(oworld, raycastDirection);
-        if (Physics.Raycast(oworld, raycastDirection, out RaycastHit hit))
+        /* ----------------- ↑ PROBABLY NOT needed anymore ↑ ------------------------------- */
+
+
+        /* ----------------- ↓ ALL WE need ↓ ------------------------------- */
+        // Yolo coordinates: (0,0) top left (640,360) bottom right
+        // HL2camer coordinates: (0,0) bottom left (640,360) top right
+        var newPosYFlipped = new Vector2(newPos.x, HL2Camera.pixelHeight - newPos.y);
+
+
+        Ray ray = HL2Camera.ScreenPointToRay(newPosYFlipped);
+        //Debug.DrawRay(oworld, raycastDirection);
+        //if (Physics.Raycast(oworld, raycastDirection, out RaycastHit hit))
         //if (Physics.Raycast(raycastDirection, oworld, out RaycastHit hit))
         //if (Physics.Raycast(raycastStart, cameraTransform.forward, out RaycastHit hit))
         //if (Physics.Raycast(pworld, tc.TransformDirection(Vector3.forward), out RaycastHit hit))
         //if (Physics.Raycast(pworld, Vector3.forward, out RaycastHit hit))
-        //if (Physics.Raycast(ray, out RaycastHit hit))
+        if (Physics.Raycast(ray, out RaycastHit hit))
         {
             log += $"\nhit point: {hit.point}";
             log += "\n--- ScreenToWorldPointRaycast --- end ---";
@@ -182,6 +212,22 @@ public class PositionHandler : MonoBehaviour
         log += "\n--- ScreenToWorldPointRaycast --- end ---";
         Debug.Log(log);
         return new Vector3(0, 0, 0);
+
+    }
+
+
+    // https://gamedev.stackexchange.com/a/121324 CC BY-SA 3.0
+    public IEnumerator UpdateLocalOffset(Orbital orbital, Vector3 from, Vector3 to, Billboard billboard)
+    {
+        float t = 0f;
+        //Debug.Log("in move");
+        while (t < 1f)
+        {
+            t += 3f * Time.deltaTime;
+            orbital.LocalOffset = Vector3.Lerp(from, to, Mathf.SmoothStep(0f, 1f, t));
+            yield return null;
+        }
+        billboard.enabled = true;
 
     }
 }

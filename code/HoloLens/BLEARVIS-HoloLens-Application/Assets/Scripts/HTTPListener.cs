@@ -10,7 +10,8 @@ public class HTTPListener : MonoBehaviour
 	private HttpListener listener;
 	private Thread listenerThread;
 	//public ThunderboardHandler thunderboardHandler;
-	public ThunderboardHandlerList thunderboardHandlerListScript;
+	public ThunderboardHandlerList ThunderboardHandlerList;
+	public PositionHandler PositionHandler;
 
 	
 
@@ -33,10 +34,10 @@ public class HTTPListener : MonoBehaviour
 		Debug.Log ("Server Started");
 
 		// there is only one thunderboardHandlerListScript in the scene
-		if (thunderboardHandlerListScript == null)
+		if (ThunderboardHandlerList == null)
 		{
 			var allTBHScripts = GameObject.FindGameObjectsWithTag("TBHList");
-			thunderboardHandlerListScript = allTBHScripts[0].GetComponent<ThunderboardHandlerList>();
+			ThunderboardHandlerList = allTBHScripts[0].GetComponent<ThunderboardHandlerList>();
 		} 
 	}
 
@@ -85,11 +86,11 @@ public class HTTPListener : MonoBehaviour
 
 					Debug.Log($"coords received: {bBoxCoordTL} -- {bBoxCoordBR}");
 
-					thunderboardHandlerListScript.TempBBoxCoordTL = bBoxCoordTL;
-					thunderboardHandlerListScript.TempBBoxCoordBR = bBoxCoordBR;
+					ThunderboardHandlerList.TempBBoxCoordTL = bBoxCoordTL;
+					ThunderboardHandlerList.TempBBoxCoordBR = bBoxCoordBR;
 
-					thunderboardHandlerListScript.TempThingURI = key;
-					thunderboardHandlerListScript.NewYoloResultArrived = true;
+					ThunderboardHandlerList.TempThingURI = key;
+					ThunderboardHandlerList.NewYoloResultArrived = true;
 				}
 				//}
 				
