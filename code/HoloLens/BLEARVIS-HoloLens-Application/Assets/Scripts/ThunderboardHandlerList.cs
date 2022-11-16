@@ -8,6 +8,7 @@ public class ThunderboardHandlerList : MonoBehaviour
     public List<ThunderboardHandler> thunderboardHandlerList;
     public PositionHandler PositionHandler;
     public GameObject thunderboardInfoBoxPrefab;
+    public GameObject thunderboardInfoBoxOrbitalPrefab;
 
     public GameObject SetYButton;
 
@@ -100,7 +101,8 @@ public class ThunderboardHandlerList : MonoBehaviour
             //if (tbh == null)
             //{
                 Debug.Log("TBH did not exist, creating one");
-                var newPrefabInstance = Instantiate(thunderboardInfoBoxPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+                //var newPrefabInstance = Instantiate(thunderboardInfoBoxPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+                var newPrefabInstance = Instantiate(thunderboardInfoBoxOrbitalPrefab, new Vector3(0, 0, 0), Quaternion.identity);
                 newPrefabInstance.transform.localRotation = Quaternion.identity;
                 newPrefabInstance.transform.localScale = new Vector3(1, 1, 1);
                 tbh = newPrefabInstance.GetComponent<ThunderboardHandler>();
@@ -123,10 +125,12 @@ public class ThunderboardHandlerList : MonoBehaviour
         string log = "--- HandleIncomingYoloResult ---";
 
 
-        var bBoxWorldCoordTL = Camera.main.ScreenToWorldPoint(bBoxCoordTL);
-        var bBoxWorldCoordBR = Camera.main.ScreenToWorldPoint(bBoxCoordBR);
-        log += $"\nbBoxWorldCoordA: {bBoxWorldCoordTL}";
-        log += $"\nbBoxWorldCoordB: {bBoxWorldCoordBR}";
+        //var bBoxWorldCoordTL = Camera.main.ScreenToWorldPoint(bBoxCoordTL);
+        var bBoxWorldCoordTL = PositionHandler.ScreenToWorldPointRaycast(bBoxCoordTL);
+        //var bBoxWorldCoordBR = Camera.main.ScreenToWorldPoint(bBoxCoordBR);
+        var bBoxWorldCoordBR = PositionHandler.ScreenToWorldPointRaycast(bBoxCoordBR);
+        log += $"\nbBoxWorldCoordTL: {bBoxWorldCoordTL}";
+        log += $"\nbBoxWorldCoordBR: {bBoxWorldCoordBR}";
 
 
         var matchingTBH = GetClosestTBHForYoloResult(bBoxWorldCoordTL, bBoxWorldCoordBR, thingURI);
@@ -134,7 +138,7 @@ public class ThunderboardHandlerList : MonoBehaviour
         if (matchingTBH == null)
         {
             log += $"\nno matching TB found or no TB in list. creating one.";
-            var newPrefabInstance = Instantiate(thunderboardInfoBoxPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+            var newPrefabInstance = Instantiate(thunderboardInfoBoxOrbitalPrefab, new Vector3(0, 0, 1), Quaternion.identity);
             newPrefabInstance.transform.localRotation = Quaternion.identity;
             newPrefabInstance.transform.localScale = new Vector3(1, 1, 1);
             matchingTBH = newPrefabInstance.GetComponent<ThunderboardHandler>();
@@ -181,7 +185,7 @@ public class ThunderboardHandlerList : MonoBehaviour
             Rect boundingBox = new Rect(bBoxWorldCoordA, bBoxWorldCoordB);
 
             // || boundingBox.Contains(tbh.ThunderboardInfoBoxPositionInWorldCoords
-            if (thingUri == tbh.ThingURI && (dist < minDistanceFromExistingTBsCenter))
+            if ((!string.IsNullOrEmpty(tbh.ThingURI) && thingUri == tbh.ThingURI) || (string.IsNullOrEmpty(tbh.ThingURI) && dist < minDistanceFromExistingTBsCenter))
             {
                 log += $"\nfound new closest TBH";
                 matchingTBH = tbh;
