@@ -205,6 +205,10 @@ class VideoCapture(object):
             return
 
         print("Frame rate (FPS)     : " + str(cameraFPS))
+        print("Frame width          : " + str(frame_width))
+        print("Frame height         : " + str(frame_height))
+        
+        APIHandler.send_generic_get_request(params=["frame_width","frame_height"], values=[frame_width,frame_height])
 
         currentFPS = cameraFPS
         perFrameTimeInMs = 1000 / cameraFPS
@@ -274,8 +278,9 @@ class VideoCapture(object):
                             # if notification should be send out to endpoint that thing is present
                             if self.holo_endpoint:
                                 try:
+                                    # EDIT: +++++++++++++++ we alway send! +++++++++++++++++++++++++++++
                                     # we only send the notification once, when the state changes from 0 to 1
-                                    if self.apiHandler.statusHandler.statuses[classLabel] != 1:
+                                    # if self.apiHandler.statusHandler.statuses[classLabel] != 1:
 
                                         ThingIsThere = True
                                         
