@@ -1,0 +1,5 @@
+si 1
+speed 4000
+r
+LoadFile build/debug/silabs_receiver_makefile.hex
+q
