@@ -1,0 +1,11 @@
+{
+   "version":1,
+   "antennaMode":"SL_RTL_AOX_ARRAY_TYPE_1x4_ULA",
+   "antennaArray":[
+      15,
+      11,
+      7,
+      3
+   ],
+   "reportMode":"IQREPORT"
+}
