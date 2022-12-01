@@ -24,73 +24,91 @@ public class ThunderboardHandler : MonoBehaviour
     public GameObject CoordinatesText;
 
     [Header("Prefab")]
-    public GameObject thunderboardInfoBoxPrefab;
+    public GameObject ThunderboardInfoBoxPrefab;
 
     [Header("Scripts")]
-    public ThunderboardHandlerList thunderboardHandlerListScript;
+    public ThunderboardHandlerList ThunderboardHandlerList;
     public PositionHandler PositionHandler;
 
     [Header("Parameters")]
-    public Vector2 BBoxPixelCoordTL = new Vector2(0,0);
-    public Vector2 BBoxPixelCoordBR = new Vector2(0,0);
-    public Vector2 BBoxWorldCoordTL = new Vector3(0, 0, 0);
-    public Vector2 BBoxWorldCoordBR = new Vector3(0, 0, 0);
-    public float Angle = 0.0f;
+    public float AngleOfArrival = 0.0f;
     public string ThunderboardID;
     public string ThingURI;
-    public DateTime LastMQTTUpdate;
+    public DateTime LastAoAUpdate;
     public DateTime LastYoloUpdate;
-    public Vector3 ThunderboardInfoBoxPositionInWorldCoords = new Vector3(0, 0, 0);
-    private float lastAngleDifference;
+    public Vector2 BBoxPixelTopLeft = new Vector2(0, 0);
+    public Vector2 BBoxPixelBottomRight = new Vector2(0, 0);
+    public Vector3 BBoxWorldTopLeft = new Vector3(0, 0, 0);
+    public Vector3 BBoxWorldBottomRight = new Vector3(0, 0, 0);
+    public Vector3 TBCurrentLocalOffsetInWorld = new Vector3(0, 0, 0);
+    public (Vector3 offset, DateTime timestamp) LastYoloOffset;
+    public (Vector3 offset, DateTime timestamp) LastAoAOffset;
 
 
-    public bool SetNewPositionFromAngle = false;
-    public bool SetNewPositionFromBBox = false;
+    public bool SetNewPositionFromAoA = false;
+    public bool SetNewPositionFromYolo = false;
     //public float newAngle;
 
     // Start is called before the first frame update
     void Start()
     {
-        lastAngleDifference = 0;
-        // there is only one thunderboardHandlerListScript in the scene
-        if (thunderboardHandlerListScript == null)
+        // there is only one thunderboardHandlerList in the scene
+        if (ThunderboardHandlerList == null)
         {
             var allTBHScripts = GameObject.FindGameObjectsWithTag("TBHList");
-            thunderboardHandlerListScript = allTBHScripts[0].GetComponent<ThunderboardHandlerList>();
+            ThunderboardHandlerList = allTBHScripts[0].GetComponent<ThunderboardHandlerList>();
         }
         if (PositionHandler == null)
         {
             var allTBHScripts = GameObject.FindGameObjectsWithTag("PositionHandler");
             PositionHandler = allTBHScripts[0].GetComponent<PositionHandler>();
         }
+        LastYoloUpdate = DateTime.UtcNow;
+        LastAoAUpdate = DateTime.UtcNow;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (SetNewPositionFromAngle)
-        {            
-            SetNewPositionThunderboardInfoBoxFromAngle();
-            SetNewPositionFromAngle = false;
-        } else if(SetNewPositionFromBBox)
+        if (SetNewPositionFromAoA)
         {
-            SetNewPositionThunderboardInfoBoxFromBBoxCoords();
-            SetNewPositionFromBBox = false;
+            if (!PositionHandler.CameraIsMovingTooMuch())
+            {
+                CalculateNewOffsetFromAoA();
+            } else
+            {
+                Debug.Log("AoA: Camera is moving tooo much. Not updating the offset.");
+            }            
+            SetNewPositionFromAoA = false;
+        }
+        else if (SetNewPositionFromYolo)
+        {
+            if (!PositionHandler.CameraIsMovingTooMuch())
+            {
+                CalculateNewOffsetFromYolo();
+            }
+            else
+            {
+                Debug.Log("Yolo: Camera is moving tooo much. Not updating the offset.");
+            }
+            SetNewPositionFromYolo = false;
+
+
         }
     }
 
- 
+
 
     /// <summary>
     /// Receives the data from a MQTT message
     /// </summary>
-    /// <param name="msg">i.e. the angle f arrival</param>
+    /// <param name="aoa">i.e. the angle f arrival</param>
     /// <param name="id">the ID from the thunderboard that has sent the message</param>
-    public void UpdateFromMQTTMessage(float msg, string id)
+    public void UpdateFromMQTTMessage(float aoa, string id)
     {
-        var currentAngle = Angle;
-        var curAngleDiff = Math.Abs(Angle - msg);
-        Debug.Log($"curAngle: {currentAngle}, newAngle: {msg}, diff: {curAngleDiff}");
+        // var currentAngle = Angle;
+        // var curAngleDiff = Math.Abs(Angle - msg);
+        // Debug.Log($"curAngle: {currentAngle}, newAngle: {msg}, diff: {curAngleDiff}");
 
         /*
         //  curAngle: 6.17, newAngle: -68.12, last diff: 54.29
@@ -103,16 +121,16 @@ public class ThunderboardHandler : MonoBehaviour
             return;
         }
         //*/
-        lastAngleDifference = curAngleDiff;
-        Angle = msg;
+        //lastAngleDifference = curAngleDiff;
+        AngleOfArrival = aoa;
         ThunderboardID = id;
-        SetNewPositionFromAngle = true;
+        SetNewPositionFromAoA = true;
         SetIDText();
         SetAngleText();
-        SetPositionText();
+        SetOffsetText();
         SetSensorText();
         ThunderboardInfoBox.SetActive(true);
-        LastMQTTUpdate = DateTime.UtcNow;
+        LastAoAUpdate = DateTime.UtcNow;
     }
 
 
@@ -126,93 +144,118 @@ public class ThunderboardHandler : MonoBehaviour
     /// <param name="thingURI"></param>
     public void UpdateParametersFromYoloResult(Vector2 pixelTL, Vector2 pixelBR, Vector3 worldTL, Vector3 worldBR, string thingURI)
     {
-        BBoxPixelCoordTL = pixelTL;
-        BBoxPixelCoordBR = pixelBR;
-        BBoxWorldCoordTL = worldTL;
-        BBoxWorldCoordBR = worldBR;
+        BBoxPixelTopLeft = pixelTL;
+        BBoxPixelBottomRight = pixelBR;
+        BBoxWorldTopLeft = worldTL;
+        BBoxWorldBottomRight = worldBR;
         ThingURI = thingURI;
-        SetNewPositionFromBBox = true;
+        SetNewPositionFromYolo = true;
         SetThingURIText();
         SetCoordiantesText();
         SetIDText();
         ThunderboardInfoBox.SetActive(true);
         LastYoloUpdate = DateTime.UtcNow;
+
     }
 
-    
+
 
 
     /// <summary>
     /// Updates the ThunderboardInfoBox's orbital.localOffset.z based on a raycast in the 
     /// center of the bounding box coordinates from YOLO.
     /// </summary>
-    public void SetNewPositionThunderboardInfoBoxFromBBoxCoords()
+    public void CalculateNewOffsetFromYolo()
     {
         string log = $"--- SetNewPositionThunderboardInfoBoxFromBBoxCoords ---";
 
-        var newX = BBoxWorldCoordTL.x + (BBoxWorldCoordBR.x - BBoxWorldCoordTL.x) /2f;
-        var newY = BBoxWorldCoordTL.y + (BBoxWorldCoordTL.y - BBoxWorldCoordBR.y) /4f;
-
         // do a Raycast in each corner of the BoundingBox and the center.
         // choose the smalles Z -> possibly closest point of object to user
-        Vector2 centerBBox = Vector2.Lerp(BBoxPixelCoordTL, BBoxPixelCoordBR, 0.5f);
-        var newPosFromRay = PositionHandler.ScreenToWorldPointRaycast(centerBBox);
-        var newPosFromRayTopLeft = PositionHandler.ScreenToWorldPointRaycast(BBoxPixelCoordTL);
-        var newPosFromRayBottomRight = PositionHandler.ScreenToWorldPointRaycast(BBoxPixelCoordBR);
-        var topRight = new Vector2(BBoxPixelCoordBR.x, BBoxPixelCoordTL.y);
-        var newPosFromRayTopRight = PositionHandler.ScreenToWorldPointRaycast(topRight);
-        var bottomLeft = new Vector2(BBoxPixelCoordTL.x, BBoxPixelCoordBR.y);
-        var newPosFromRayBottomLeft = PositionHandler.ScreenToWorldPointRaycast(bottomLeft);
+        Vector2 centerBBox = Vector2.Lerp(BBoxPixelTopLeft, BBoxPixelBottomRight, 0.5f);
 
-        var newZ = Mathf.Min(newPosFromRay.z, newPosFromRayTopLeft.z, newPosFromRayBottomRight.z,
-            newPosFromRayTopRight.z, newPosFromRayBottomLeft.z);
+        var newOffsetFromRayCenter = PositionHandler.ScreenToCameraPointThroughRaycast(centerBBox);
+        // from the corners of the bbox go more towards the center. might make hitting the object more likely
+        //Vector2.Lerp(BBoxPixelTopLeft, centerBBox, 0.25f)
+        var newOffsetFromRayTopLeft = PositionHandler.ScreenToCameraPointThroughRaycast(BBoxPixelTopLeft);
+        //Vector2.Lerp(BBoxPixelBottomRight, centerBBox, 0.25f)
+        var NewOffsetFromRayBottomRight = PositionHandler.ScreenToCameraPointThroughRaycast(BBoxPixelBottomRight);
+        var topRight = new Vector2(BBoxPixelBottomRight.x, BBoxPixelTopLeft.y);
+        //Vector2.Lerp(topRight, centerBBox, 0.25f)
+        var newOffsetFromRayTopRight = PositionHandler.ScreenToCameraPointThroughRaycast(topRight);
+        var bottomLeft = new Vector2(BBoxPixelTopLeft.x, BBoxPixelBottomRight.y);
+        // Vector2.Lerp(bottomLeft, centerBBox, 0.25f)
+        var newOffsetFromRayBottomLeft = PositionHandler.ScreenToCameraPointThroughRaycast(bottomLeft);
 
-        //var newZ = thunderboardHandlerListScript.ScreenToWorldPointRaycast(centerBBox).z;
+        var bboxHeight = Mathf.Abs(NewOffsetFromRayBottomRight.y - newOffsetFromRayTopLeft.y);
+        log += $"\nbboxHeight: {bboxHeight}";
+
+        // get the z-value that is closest to the HL2
+        var closestZ = Mathf.Min(newOffsetFromRayCenter.z, newOffsetFromRayTopLeft.z, NewOffsetFromRayBottomRight.z,
+            newOffsetFromRayTopRight.z, newOffsetFromRayBottomLeft.z);
+
         // keep the InfoBox at least 0.5m away from the user
-        newZ = (newZ <= 0.5f) ? 0.5f : newZ;
-        //newZ  = (newPosFromRay.z < 0.5) ? 0.5f : newPosFromRay.z;
-        //newPosFromRay.z = newZ;
-          //var newPositionInfoBox = new Vector3(newX, newY, newZ);
+        //closestZ += 0.2f;
+        closestZ = (closestZ <= 0.7f) ? 0.7f : closestZ;
 
         var thunderboardInfoBoxTransform = ThunderboardInfoBox.GetComponent<Transform>();
         var curPosition = thunderboardInfoBoxTransform.position;
-
-       
         log += $"\ncurPosition: {curPosition}";
+
+        var orbital = ThunderboardInfoBox.GetComponent<Orbital>();
+        var curLocalOffset = orbital.LocalOffset;
+        log += $"\ncurLocalOffset: {curLocalOffset}";
         //log += $"\nnewPosition: {newPosFromRay}";
 
-        if (newZ > 1)
+        /*
+        if (newZ > 2)
         {
             log += $"\nz > 1: {newZ}";
-            var newScale =  (newZ > 3) ? 3 : newZ;
+            var newScale = (newZ > 3) ? 3 : newZ;
             thunderboardInfoBoxTransform.localScale = new Vector3(newScale, newScale, newScale);
         }
+        */
 
-        //ThunderboardInfoBoxPositionInWorldCoords = newPosFromRay;
-        //thunderboardInfoBoxTransform.position = new Vector3(curPosition.x, curPosition.y, newPosFromRay.z);
-
-        //if ((LastYoloUpdate - DateTime.UtcNow).TotalSeconds > 2)
+        log += $"\ntime diff in s: {(DateTime.UtcNow - LastYoloUpdate).TotalSeconds}";
+        //if ((DateTime.UtcNow - LastYoloUpdate).TotalSeconds > 2)
         //{
-            var orbital = ThunderboardInfoBox.GetComponent<Orbital>();
-            orbital.enabled = true;
+        //var orbital = ThunderboardInfoBox.GetComponent<Orbital>();
+        orbital.enabled = true;
 
-            var billboard = ThunderboardInfoBox.GetComponent<Billboard>();
-            billboard.enabled = false;
-            orbital.UpdateLinkedTransform = false;
-            var curLocalOffset = orbital.LocalOffset;
-            log += $"\ncurLocalOffset: {curLocalOffset}";
-            var newLocalOffset = new Vector3(curLocalOffset.x, curLocalOffset.y, newZ);
-            log += $"\nnewLocalOffset: {newLocalOffset}";
+        var billboard = ThunderboardInfoBox.GetComponent<Billboard>();
+        billboard.enabled = false;
+        orbital.UpdateLinkedTransform = false;
 
-            StartCoroutine(PositionHandler.UpdateLocalOffset(orbital, curLocalOffset, newLocalOffset, billboard));
+        
+        // position the InfoBox in the middle of the object (x), above it (y+0.5*bboxHeight), and closest z (newZ)
+        var newRawOffset = new Vector3(newOffsetFromRayCenter.x, newOffsetFromRayCenter.y, closestZ);
+        log += $"\nnewRawOffset: {newRawOffset}";
+        //newRawOffset = Camera.main.transform.position - newRawOffset;
+        var newLocalOffset = new Vector3(newRawOffset.x, newRawOffset.y+0.7f*bboxHeight, newRawOffset.z);
+        //var newLocalOffset = new Vector3(newRawOffset.x, newRawOffset.y, newZ);
+        log += $"\nnewLocalOffset: {newLocalOffset}";
+
+
+        var zHasChangedMuch = (Mathf.Abs(closestZ - curLocalOffset.z) > 0.5); //&& (Vector3.Distance(curLocalOffset, newLocalOffset) < 0.1);
+        log += $"\nzHasChangedTooMuch: {zHasChangedMuch}";
+        log += $"\nnew vs cur offset: {Vector3.Distance(curLocalOffset, newLocalOffset)}";
+
+        // Vector3.Distance(curLocalOffset, newLocalOffset) > 0.1 &&
+        //if (!zHasChangedMuch)
+        //{
+        LastYoloOffset = (newLocalOffset, LastYoloUpdate);
+        PositionHandler.UpdateLocalOffsetSensorFusion(this, orbital, billboard);
+        //StartCoroutine(PositionHandler.MoveLocalOffset(orbital, curLocalOffset, newLocalOffset, billboard));
+        //LastYoloUpdate = DateTime.UtcNow;
+        //}
         //}
 
-      
-       // orbital.LocalOffset = newLocalOffset;
 
-        SetPositionText();
+        // orbital.LocalOffset = newLocalOffset;
+
+        SetOffsetText();
         log += $"\n--- SetNewPositionThunderboardInfoBoxFromBBoxCoords --- end ---";
         Debug.Log(log);
+
     }
 
 
@@ -220,59 +263,64 @@ public class ThunderboardHandler : MonoBehaviour
     /// <summary>
     /// Updates the ThunderboardInfoBox's position based on the received angle of arrival from this thunderboard.
     /// </summary>
-    public void SetNewPositionThunderboardInfoBoxFromAngle()
+    public void CalculateNewOffsetFromAoA()
     {
         try
         {
-            
+
             string log = $"--- SetNewPositionThunderboardInfoBoxFromAngle ---";
 
-            var newOffset = PositionHandler.CalculateLocalOffsetFromAngle(Angle);
+            var newOffset = PositionHandler.CalculateLocalOffsetFromAngle(AngleOfArrival);
             newOffset = new Vector3(newOffset.x, 0, newOffset.z);
 
-            Debug.Log($"new angle: {Angle} --- newX: {newOffset.x}");
+            Debug.Log($"new angle: {AngleOfArrival} --- newX: {newOffset.x}");
 
             var thunderboardInfoBoxTransform = ThunderboardInfoBox.GetComponent<Transform>();
             var curPosition = thunderboardInfoBoxTransform.position;
             log += $"\ncurPosition: {curPosition}";
 
             log += $"\nnew Offset: {newOffset}";
-            ThunderboardInfoBoxPositionInWorldCoords = newOffset;
+            //TBCurrentLocalOffsetInWorld = newOffset;
 
             var orbital = ThunderboardInfoBox.GetComponent<Orbital>();
             orbital.enabled = true;
             orbital.UpdateLinkedTransform = false;
             var billboard = ThunderboardInfoBox.GetComponent<Billboard>();
             billboard.enabled = false;
+            
             var curLocalOffset = orbital.LocalOffset;
             log += $"\ncurLocalOffset: {curLocalOffset}";
             var newLocalOffset = newOffset;
             log += $"\nnewLocalOffset: {newLocalOffset}";
 
-            StartCoroutine(PositionHandler.UpdateLocalOffset(orbital, curLocalOffset, newLocalOffset, billboard));
+
+            LastAoAOffset = (newLocalOffset, LastAoAUpdate);
+            PositionHandler.UpdateLocalOffsetSensorFusion(this, orbital, billboard);
+
+            //StartCoroutine(PositionHandler.MoveLocalOffset(orbital, curLocalOffset, newLocalOffset, billboard));
 
             //thunderboardInfoBoxTransform.position = new Vector3(newPosition.x, newPosition.y, newPosition.z);
 
-            var newRotation = CalculateRotationFromAngle(thunderboardInfoBoxTransform, Angle);
+            //var newRotation = CalculateRotationFromAngle(thunderboardInfoBoxTransform, AngleOfArrival);
             //thunderboardInfoBoxTransform.LookAt(Camera.main.transform);
             //var n = Camera.main.transform.position - thunderboardInfoBoxTransform.position;
-       
+
             //thunderboardInfoBoxTransform.localRotation = newRotation;
-            
-            SetPositionText();
-            SetAngleText();
+
+           
 
             log += $"--- SetNewPositionThunderboardInfoBoxFromAngle --- end ---";
             Debug.Log(log);
 
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             Debug.Log($"Exception: {e}");
         }
-        
+
     }
 
-    
+
 
     /// <summary>
     ///  Updates the "Thunderboard ID" text in the ThunderboardInfoBox
@@ -298,16 +346,16 @@ public class ThunderboardHandler : MonoBehaviour
     /// </summary>
     public void SetAngleText()
     {
-        var angleT = $"Angle of Arrival:<space=4em> {Angle}° ";
+        var angleT = $"Angle of Arrival:<space=4em> {AngleOfArrival}° ";
         AngleText.GetComponent<TextMeshPro>().text = angleT;
     }
 
     /// <summary>
     ///  Updates the "position" text in the ThunderboardInfoBox
     /// </summary>
-    public void SetPositionText()
+    public void SetOffsetText()
     {
-        var coords = $"Position:<space=7.4em> {ThunderboardInfoBoxPositionInWorldCoords} ";
+        var coords = $"Offset:<space=7.4em> {TBCurrentLocalOffsetInWorld} ";
         PositionText.GetComponent<TextMeshPro>().text = coords;
     }
     /// <summary>
@@ -315,8 +363,8 @@ public class ThunderboardHandler : MonoBehaviour
     /// </summary>
     public void SetCoordiantesText()
     {
-        var coords = $"BBox Pixel Coordinates:<space=1.5em> {BBoxPixelCoordTL} and {BBoxPixelCoordBR}";
-        coords += $"\nBBox World Coordinates:<space=2em> {BBoxWorldCoordTL} and {BBoxWorldCoordBR}";
+        var coords = $"BBox Pixel Coordinates:<space=1.5em> {BBoxPixelTopLeft} and {BBoxPixelBottomRight}";
+        coords += $"\nBBox World Coordinates:<space=2em> {BBoxWorldTopLeft} and {BBoxWorldBottomRight}";
         CoordinatesText.GetComponent<TextMeshPro>().text = coords;
     }
 
@@ -325,89 +373,13 @@ public class ThunderboardHandler : MonoBehaviour
     /// </summary>
     public void SetSensorText()
     {
-        var text = $"Sensor Value:<space=2em> {Mathf.Round(UnityEngine.Random.Range(15f,35f) *100f)/100f} °C";
+        var text = $"Sensor Value:<space=2em> {Mathf.Round(UnityEngine.Random.Range(15f, 35f) * 100f) / 100f} °C";
         SensorText.GetComponent<TextMeshPro>().text = text;
     }
 
-    /*
-    /// <summary>
-    /// Calculate a new position from an angle.
-    /// </summary>
-    /// <param name="angle"></param>
-    /// <returns></returns>
-    public Vector3 CalculatePositionFromAngle(float angle)
-    {
-        string log = "--- CalculatePositionFromAngle ---";
-        var newPosition = new Vector3(0, 0, 1);
+    
 
-        // tan(angle) = x/y
-        // -> x = tan(angle) * y
-        // z = 1
-        // a = angleFloat
-        // b = 90°
-        /*
-         *     x
-         *  ________
-         *  |b     /
-         *  |     /
-         *  |    /          
-         * z|   /
-         *  |  /
-         *  |a/
-         *  |/ 
-         ///
-        // only x-value:
-        // negate because +90 is on left and -90 is on right of receiver
-        //var newX = Mathf.Tan(Mathf.Deg2Rad * angle);
-
-        // x- and z-value. keeps the info box on a circle around the HL2.
-        var newXCircle = Mathf.Cos(Mathf.Deg2Rad * (angle + 90));
-        var newZCircle = Mathf.Sin(Mathf.Deg2Rad * (angle + 90));
-
-        newPosition.x = newXCircle;
-        newPosition.z = newZCircle;
-        log += $"newPosition: {newPosition}";
-
-        var curCameraPosition = Camera.main.transform.position;
-        log += $"curCameraPosition: {curCameraPosition}";
-
-        var newPosPlusCam = newPosition + curCameraPosition;
-        log += $"newPosition +camPos: {newPosPlusCam}";
-
-
-
-
-        log += "--- CalculatePositionFromAngle --- end ---";
-        Debug.Log(log);
-
-        return newPosition;
-    }
-*/
-
-    public Quaternion CalculateRotationFromAngle(Transform tbT, float angle)
-    {
-        // negate because +90 is on left and -90 is on right of receiver
-
-        tbT.LookAt(Camera.main.transform.position, Camera.main.transform.up);
-        var newYRotation = tbT.rotation.y;
-
-        if (angle < 0)
-        {
-            newYRotation = -newYRotation;
-        }
-        var rotation = new Quaternion(0, newYRotation , 0, 1);
-
-
-
-
-        if (Camera.main.transform.position.z < 0)
-        {
-            Debug.Log($"Camera.main.transform.position.z: {Camera.main.transform.position.z}");
-            angle = 180 - angle;
-        }
-        //Quaternion.Euler(0, angle, 0);
-        return Quaternion.Euler(0, angle, 0);
-    }
+   
 
     /// <summary>
     /// Hides a given ThunderboardInfobox and deletes it's associated ThunderboardHandler.
@@ -415,7 +387,7 @@ public class ThunderboardHandler : MonoBehaviour
     /// <param name="InfoBox"></param>
     public void RemoveInfoBox(GameObject InfoBox)
     {
-        thunderboardHandlerListScript.thunderboardHandlerList.RemoveAll(tbh => tbh.ThunderboardID == ThunderboardID);
+        ThunderboardHandlerList.thunderboardHandlerList.RemoveAll(tbh => tbh.ThunderboardID == ThunderboardID);
         InfoBox.SetActive(false);
         Destroy(InfoBox);
     }

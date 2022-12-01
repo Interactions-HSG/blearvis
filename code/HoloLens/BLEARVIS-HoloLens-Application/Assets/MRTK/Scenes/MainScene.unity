@@ -377,6 +377,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: NearMenu3x1
       objectReference: {fileID: 0}
+    - target: {fileID: 7545364183608891058, guid: 9a7c24f281a2c3d45a9b8befe608bf77,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7916557576929228339, guid: 9a7c24f281a2c3d45a9b8befe608bf77,
         type: 3}
       propertyPath: OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
@@ -917,7 +922,6 @@ MonoBehaviour:
     type: 3}
   thunderboardInfoBoxOrbitalPrefab: {fileID: 8357164154382592003, guid: bc7e6c6841bdd514195e131e6088be7c,
     type: 3}
-  SetYButton: {fileID: 0}
   GlobalTbhYValue: 0
   GlobalTbhZValue: 1
   TempBBoxCoordTL: {x: 0, y: 0}
@@ -1176,6 +1180,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: CoordinateInfo
       objectReference: {fileID: 0}
+    - target: {fileID: 7545364183608891058, guid: 9a7c24f281a2c3d45a9b8befe608bf77,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7916557576929228339, guid: 9a7c24f281a2c3d45a9b8befe608bf77,
         type: 3}
       propertyPath: OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
@@ -1425,20 +1434,19 @@ MonoBehaviour:
   SensorText: {fileID: 0}
   PositionText: {fileID: 0}
   CoordinatesText: {fileID: 0}
-  thunderboardInfoBoxPrefab: {fileID: 6255741003881863841, guid: 232950cd9fd42e24e8ead650212b9d85,
-    type: 3}
-  thunderboardHandlerListScript: {fileID: 395525679}
+  ThunderboardInfoBoxPrefab: {fileID: 0}
+  ThunderboardHandlerList: {fileID: 0}
   PositionHandler: {fileID: 1658824199}
-  BBoxPixelCoordTL: {x: 0, y: 0}
-  BBoxPixelCoordBR: {x: 0, y: 0}
-  BBoxWorldCoordTL: {x: 0, y: 0}
-  BBoxWorldCoordBR: {x: 0, y: 0}
-  Angle: 0
+  AngleOfArrival: 0
   ThunderboardID: 
   ThingURI: 
-  ThunderboardInfoBoxPositionInWorldCoords: {x: 0, y: 0, z: 0}
-  SetNewPositionFromAngle: 0
-  SetNewPositionFromBBox: 0
+  BBoxPixelTopLeft: {x: 0, y: 0}
+  BBoxPixelBottomRight: {x: 0, y: 0}
+  BBoxWorldTopLeft: {x: 0, y: 0, z: 0}
+  BBoxWorldBottomRight: {x: 0, y: 0, z: 0}
+  TBCurrentLocalOffsetInWorld: {x: 0, y: 0, z: 0}
+  SetNewPositionFromAoA: 0
+  SetNewPositionFromYolo: 0
 --- !u!1 &917054635
 GameObject:
   m_ObjectHideFlags: 0
@@ -2160,6 +2168,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: NearMenu3x1 (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 7545364183608891058, guid: 9a7c24f281a2c3d45a9b8befe608bf77,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7916557576929228339, guid: 9a7c24f281a2c3d45a9b8befe608bf77,
         type: 3}
       propertyPath: OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
@@ -2610,12 +2623,22 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2678031858629524640, guid: bc7e6c6841bdd514195e131e6088be7c,
         type: 3}
+      propertyPath: localOffset.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2678031858629524640, guid: bc7e6c6841bdd514195e131e6088be7c,
+        type: 3}
       propertyPath: orientationType
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2678031858629524640, guid: bc7e6c6841bdd514195e131e6088be7c,
         type: 3}
       propertyPath: updateLinkedTransform
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7084861848671713613, guid: bc7e6c6841bdd514195e131e6088be7c,
+        type: 3}
+      propertyPath: additionalOffset.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8357164154382592000, guid: bc7e6c6841bdd514195e131e6088be7c,
@@ -2626,12 +2649,12 @@ PrefabInstance:
     - target: {fileID: 8357164154382592000, guid: bc7e6c6841bdd514195e131e6088be7c,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.083
+      value: 0.347
       objectReference: {fileID: 0}
     - target: {fileID: 8357164154382592000, guid: bc7e6c6841bdd514195e131e6088be7c,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.001
       objectReference: {fileID: 0}
     - target: {fileID: 8357164154382592000, guid: bc7e6c6841bdd514195e131e6088be7c,
         type: 3}

@@ -208,7 +208,7 @@ class VideoCapture(object):
         print("Frame width          : " + str(frame_width))
         print("Frame height         : " + str(frame_height))
         
-        APIHandler.send_generic_get_request(params=["frame_width","frame_height"], values=[frame_width,frame_height])
+        self.apiHandler.send_generic_get_request(params=["frame_width","frame_height"], values=[frame_width,frame_height])
 
         currentFPS = cameraFPS
         perFrameTimeInMs = 1000 / cameraFPS

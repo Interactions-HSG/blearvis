@@ -10,7 +10,7 @@ public class ThunderboardHandlerList : MonoBehaviour
     public GameObject thunderboardInfoBoxPrefab;
     public GameObject thunderboardInfoBoxOrbitalPrefab;
 
-    public GameObject SetYButton;
+    //public GameObject SetYButton;
 
     public float GlobalTbhYValue = 0;
     public float GlobalTbhZValue = 1;
@@ -58,7 +58,7 @@ public class ThunderboardHandlerList : MonoBehaviour
     {
         var pos = g.GetComponent<Transform>().position;
         var newPos = Camera.main.WorldToScreenPoint(pos);
-        var worldAgain = PositionHandler.ScreenToWorldPointRaycast(newPos);
+        var worldAgain = PositionHandler.ScreenToCameraPointThroughRaycast(newPos);
         var log = $"WorldAgain: {worldAgain}";
             
         var oworld = Camera.main.transform.position;
@@ -95,11 +95,11 @@ public class ThunderboardHandlerList : MonoBehaviour
 
         if (tbh == null)
         {
-            //var newPosition = PositionHandler.CalculatePositionFromAngle(newAngle);
-            //tbh = GetClosestTBHForMQTTResult(newPosition);
+            var newOffset = PositionHandler.CalculateLocalOffsetFromAngle(newAngle);
+            tbh = GetClosestTBHForMQTTResult(newOffset);
 
-            //if (tbh == null)
-            //{
+            if (tbh == null)
+            {
                 Debug.Log("TBH did not exist, creating one");
                 //var newPrefabInstance = Instantiate(thunderboardInfoBoxPrefab, new Vector3(0, 0, 0), Quaternion.identity);
                 var newPrefabInstance = Instantiate(thunderboardInfoBoxOrbitalPrefab, new Vector3(0, 0, 0), Quaternion.identity);
@@ -107,7 +107,8 @@ public class ThunderboardHandlerList : MonoBehaviour
                 newPrefabInstance.transform.localScale = new Vector3(1, 1, 1);
                 tbh = newPrefabInstance.GetComponent<ThunderboardHandler>();
                 thunderboardHandlerList.Add(tbh);
-            //}
+            }
+            //tbh.TBCurrentLocalOffsetInWorld = newOffset;
             //tbh.thunderboardPositionInWorldCoords = newPosition;
         }
        
@@ -126,9 +127,9 @@ public class ThunderboardHandlerList : MonoBehaviour
 
 
         //var bBoxWorldCoordTL = Camera.main.ScreenToWorldPoint(bBoxCoordTL);
-        var bBoxWorldCoordTL = PositionHandler.ScreenToWorldPointRaycast(bBoxCoordTL);
+        var bBoxWorldCoordTL = PositionHandler.ScreenToCameraPointThroughRaycast(bBoxCoordTL);
         //var bBoxWorldCoordBR = Camera.main.ScreenToWorldPoint(bBoxCoordBR);
-        var bBoxWorldCoordBR = PositionHandler.ScreenToWorldPointRaycast(bBoxCoordBR);
+        var bBoxWorldCoordBR = PositionHandler.ScreenToCameraPointThroughRaycast(bBoxCoordBR);
         log += $"\nbBoxWorldCoordTL: {bBoxWorldCoordTL}";
         log += $"\nbBoxWorldCoordBR: {bBoxWorldCoordBR}";
 
@@ -178,7 +179,7 @@ public class ThunderboardHandlerList : MonoBehaviour
             log += $"\nid: {tbh.ThunderboardID}";
             Vector2 centerBBox = Vector2.Lerp(bBoxWorldCoordA, bBoxWorldCoordB, 0.5f);
 
-            Vector2 curTBPos = new Vector2(tbh.ThunderboardInfoBoxPositionInWorldCoords.x, tbh.ThunderboardInfoBoxPositionInWorldCoords.y);
+            Vector2 curTBPos = new Vector2(tbh.TBCurrentLocalOffsetInWorld.x, tbh.TBCurrentLocalOffsetInWorld.y);
             
             var dist = Vector2.Distance(curTBPos, centerBBox);
 
@@ -193,7 +194,7 @@ public class ThunderboardHandlerList : MonoBehaviour
                
             }
                 
-            log += $"\nsaved pos: {tbh.ThunderboardInfoBoxPositionInWorldCoords}";
+            log += $"\nsaved pos: {tbh.TBCurrentLocalOffsetInWorld}";
             log += $"\nnew interpolated pos: {centerBBox}";
             log += $"\ndist: {dist}";
             
@@ -206,10 +207,9 @@ public class ThunderboardHandlerList : MonoBehaviour
     /// <summary>
     /// Based on a position returns the closest existing TunderboardHandler.
     /// </summary>
-    /// <param name="position"></param>
-    /// <param name="threshold">Optionally. Might not be necessary.</param>
+    /// <param name="newOffset"></param>
     /// <returns></returns>
-    public ThunderboardHandler GetClosestTBHForMQTTResult(Vector3 newPosition)
+    public ThunderboardHandler GetClosestTBHForMQTTResult(Vector3 newOffset)
     {
         var minDistanceFromExistingTBsCenter = Mathf.Infinity;
         ThunderboardHandler matchingTBH = null;
@@ -218,16 +218,19 @@ public class ThunderboardHandlerList : MonoBehaviour
 
         foreach (ThunderboardHandler tbh in thunderboardHandlerList)
         {
+            if (tbh.ThunderboardID != null) continue;
             log += $"\nid: {tbh.ThunderboardID}";
-            Vector2 newInterpolatedPositionBBox = Vector2.Lerp(tbh.BBoxWorldCoordTL, tbh.BBoxWorldCoordBR, 0.5f);
+            //Vector2 newInterpolatedPositionBBox = Vector2.Lerp(tbh.BBoxWorldTopLeft, tbh.BBoxWorldBottomRight, 0.5f);
+            var curTBHOffset = tbh.TBCurrentLocalOffsetInWorld;
 
             //Vector2 curTBPos = new Vector2(tbh.thunderboardPositionInWorldCoords.x, tbh.thunderboardPositionInWorldCoords.y);
 
-            var dist = Vector2.Distance(newPosition, newInterpolatedPositionBBox);
+            var dist = Vector2.Distance(newOffset, curTBHOffset);
 
-            Rect boundingBox = new Rect(tbh.BBoxWorldCoordTL, tbh.BBoxWorldCoordBR);
+            //Rect boundingBox = new Rect(tbh.BBoxWorldTopLeft, tbh.BBoxWorldBottomRight);
+            // || boundingBox.Contains(newOffset)
 
-            if (dist < minDistanceFromExistingTBsCenter || boundingBox.Contains(newPosition))
+            if (dist < minDistanceFromExistingTBsCenter)
             {
                 log += $"\nfound new closest TBH";
                 matchingTBH = tbh;
@@ -235,8 +238,9 @@ public class ThunderboardHandlerList : MonoBehaviour
 
             }
 
-            log += $"\nsaved pos: {tbh.ThunderboardInfoBoxPositionInWorldCoords}";
-            log += $"\nnew interpolated pos: {newInterpolatedPositionBBox}";
+            log += $"\ncur offset: {tbh.TBCurrentLocalOffsetInWorld}";
+            log += $"\nnew offset: {newOffset}";
+            //log += $"\nnew interpolated pos: {newInterpolatedPositionBBox}";
             log += $"\ndist: {dist}";
 
         }
