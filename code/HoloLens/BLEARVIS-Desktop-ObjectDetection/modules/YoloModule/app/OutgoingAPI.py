@@ -19,7 +19,7 @@ class APIHandler:
             r = requests.get(url, timeout=120)
             print(r)
             if r.status_code == 200:
-                print("Request {} failed with status code {}".format(url, r.status_code))
+                print("Request {} succeded with status code {}".format(url, r.status_code))
             else:
                 print("Request {} failed with status code {}".format(url, r.status_code))
         except requests.ConnectionError as e:
@@ -36,11 +36,26 @@ class APIHandler:
         else:
             return
         
-    def handleThing(self, thing, display, coord1, coord2):
+    def handleThing(self, thing, display, coord1, coord2, numberOfThingsInScene):
 
         # if self.statusHandler.statuses[thing] != display:
             
-        url = "{}/?{}={}&coordTLx={}&coordTLy={}&coordBRx={}&coordBRy={}".format(self.holo_url, urllib.parse.quote(thing), str(display), str(int(coord1[0])), str(int(coord1[1])), str(int(coord2[0])), str(int(coord2[1])))
+        url = "{}/?{}={}&coordTLx={}&coordTLy={}&coordBRx={}&coordBRy={}&&numberOfThingsInScene={}".format(self.holo_url, urllib.parse.quote(thing), str(display), str(int(coord1[0])), str(int(coord1[1])), str(int(coord2[0])), str(int(coord2[1])), str(numberOfThingsInScene))
+        # url = f"{self.holo_url}/?{urllib.parse.quote(thing)}={str(display)}&coordTLx={ str(int(coord1[0]))}&coordTLy={str(int(coord1[1]))}&coordBRx={str(int(coord2[0]))}&coordBRy={str(int(coord2[1]))}&numberOfThingsInScene={numberOfThingsInScene}"
+        
+        # url = f"{self.holo_url}"
+        params = {
+            urllib.parse.quote(thing) : str(display), 
+            'coordTLx': str(int(coord1[0])),
+            'coordTLy': str(int(coord1[1])),
+            'coordBRx': str(int(coord2[0])),
+            'coordBRy': str(int(coord2[1])),
+            'numberOfThingsInScene': numberOfThingsInScene
+            }
+        # print(url + urllib.parse.urlencode(params))
+        
+        # full_url = f"{url}/{urllib.parse.urlencode(params)}"
+        
         print(url)
             
         self.send_get_request(url) 

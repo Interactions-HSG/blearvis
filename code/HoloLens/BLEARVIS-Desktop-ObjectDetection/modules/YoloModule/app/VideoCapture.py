@@ -301,7 +301,8 @@ class VideoCapture(object):
                                         
                                         if ThingIsThere:
                                             print("Thing is there")
-                                            self.apiHandler.handleThing(thing=classLabel, display=1, coord1=coord1, coord2=coord2) # send call to display all actions on the Hololens that are related with this object
+                                            numberOfThingsInScene =  len(detections)
+                                            self.apiHandler.handleThing(thing=classLabel, display=1, coord1=coord1, coord2=coord2, numberOfThingsInScene=numberOfThingsInScene) # send call to display all actions on the Hololens that are related with this object
                                 
                                 # when thing is not of interest to us
                                 except KeyError:
@@ -350,7 +351,8 @@ class VideoCapture(object):
                     # thing is no longer in queue
                     if not ThingIsThere:
                         # update state
-                        self.apiHandler.handleThing(thing=thing, display=0, coord1=coord1, coord2=coord2)
+                        numberOfThingsInScene =  len(detections)
+                        self.apiHandler.handleThing(thing=thing, display=0, coord1=coord1, coord2=coord2, numberOfThingsInScene=numberOfThingsInScene)
                         print("Thing {} is not present anymore.".format(thing))
                 
             # Calculate FPS rate at which the VideoCapture is able to process the frames

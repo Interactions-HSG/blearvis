@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 403473906387635}
   - component: {fileID: 403473906387632}
   - component: {fileID: 4573996019099507653}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: FrontPlate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -106,7 +106,7 @@ GameObject:
   - component: {fileID: 403473988725122}
   - component: {fileID: 403473988725124}
   - component: {fileID: 403473988725125}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: UIButtonSquareIcon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -185,7 +185,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 403474981989973}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: ButtonContent
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -218,7 +218,7 @@ GameObject:
   - component: {fileID: 403475097064608}
   - component: {fileID: 403475097064670}
   - component: {fileID: 403475097064671}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: TextMeshPro
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -403,7 +403,7 @@ GameObject:
   - component: {fileID: 2034734824965053831}
   - component: {fileID: 7652700945372688150}
   - component: {fileID: 447192953299707747}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: ButtonOne
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -926,7 +926,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8608385727416414177}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: SeeItSayItLabel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -958,7 +958,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 586478177508944304}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: LabelPlate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1260,7 +1260,7 @@ GameObject:
   m_Component:
   - component: {fileID: 886408674007922818}
   - component: {fileID: 7050578187500354773}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: UIButtonSpriteIcon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2656,7 +2656,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2823166391968143781}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: BackPlate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2687,7 +2687,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2104390017241571413}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: CompressableButtonVisuals
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4279,7 +4279,7 @@ GameObject:
   - component: {fileID: 1864565678823848381}
   - component: {fileID: 4795721575953998355}
   - component: {fileID: 8701635598355133593}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: Quad
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4362,7 +4362,7 @@ GameObject:
   - component: {fileID: 2406654715875349142}
   - component: {fileID: 5190543517350974583}
   - component: {fileID: 9182050099838621301}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: TextMeshPro
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6110,7 +6110,7 @@ GameObject:
   - component: {fileID: 1584822297330344327}
   - component: {fileID: 305075998720960677}
   - component: {fileID: 5158597648349841396}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: HighlightPlate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6279,7 +6279,7 @@ GameObject:
   - component: {fileID: 7066967328397000001}
   - component: {fileID: 6410470994717143515}
   - component: {fileID: 5183021797710967570}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: UIButtonCharIcon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6807,7 +6807,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2815925813974614201}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: IconAndText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6863,7 +6863,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8357164154382592003}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.8}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 3598460461222619349}
@@ -7084,7 +7084,7 @@ MonoBehaviour:
   scaleLerpTime: 0
   maintainScaleOnInitialization: 1
   smoothing: 1
-  lifetime: 0.5
+  lifetime: 1
   orientationType: 5
   localOffset: {x: 0, y: 0, z: 1}
   worldOffset: {x: 0, y: 0, z: 0}
@@ -7385,7 +7385,7 @@ GameObject:
   - component: {fileID: 2930782716654239762}
   - component: {fileID: 2277003251518497090}
   - component: {fileID: 8566263924694941068}
-  m_Layer: 2
+  m_Layer: 0
   m_Name: Quad
   m_TagString: Untagged
   m_Icon: {fileID: 0}

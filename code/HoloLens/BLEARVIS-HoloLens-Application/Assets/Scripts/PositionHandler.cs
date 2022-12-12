@@ -68,7 +68,7 @@ public class PositionHandler : MonoBehaviour
         var distanceToLastPosition = Vector3.Distance(_lastCameraPosition, _mainCamera.transform.position);
         log += $"\ndistanceToLastPosition: {distanceToLastPosition}";
 
-        if (distanceToLastPosition > 0.007)
+        if (distanceToLastPosition > 0.01)
         {
             isMovingTooMuch = true;
         }
@@ -81,12 +81,14 @@ public class PositionHandler : MonoBehaviour
         log += $"\ncurrent rotation: {current.eulerAngles}";
         var diff = current * Quaternion.Inverse(last);
         var diffX = Mathf.Abs(last.eulerAngles.x - current.eulerAngles.x);
+        var diffX360 = Mathf.Abs((360 + last.eulerAngles.x) - current.eulerAngles.x);
         var diffY = Mathf.Abs(last.eulerAngles.y - current.eulerAngles.y);
-        log += $"\ndiffX: {diffX}";
-        log += $"\ndiffY: {diffY}";
+        var diffY360 = Mathf.Abs((360 + last.eulerAngles.y) - current.eulerAngles.y);
+        log += $"\ndiffX: {diffX} / {diffX360}";
+        log += $"\ndiffY: {diffY} / {diffY360}";
         log += $"\nrotation diff: {diff.eulerAngles.ToString()}";
 
-        if (diffX > 3 || diffY > 3 )
+        if (Mathf.Min(diffX, diffX360) > 5 || Mathf.Min(diffY, diffY360) > 5 )
         {
             isMovingTooMuch = true;
         }
@@ -256,9 +258,9 @@ public class PositionHandler : MonoBehaviour
         //if (Physics.Raycast(raycastStart, cameraTransform.forward, out RaycastHit hit))
         //if (Physics.Raycast(pworld, tc.TransformDirection(Vector3.forward), out RaycastHit hit))
         //if (Physics.Raycast(pworld, Vector3.forward, out RaycastHit hit))
-        if (Physics.Raycast(ray, out RaycastHit hit, 10))
+        if (Physics.Raycast(ray, out RaycastHit hit, 20))
         {
-            // we need the hitpoint in local camer space, to set the local offset of the hologram
+            // we need the hitpoint in local camera space, to set the local offset of the hologram relative to the user's head
             var newInCamLocalSpace = HL2Camera.transform.InverseTransformPoint(hit.point);
             log += $"\nhit point: {hit.point}";
             log += $"\nnewInCamLocalSpace: {newInCamLocalSpace}";
@@ -289,6 +291,7 @@ public class PositionHandler : MonoBehaviour
 
         if (_positionIsChangingRightNow)
         {
+            Debug.Log("Position is already changing right now. Not updating.");
             return;
         }
         string log = "---------- UpdateLocalOffset ------------ start ---";
@@ -350,17 +353,32 @@ public class PositionHandler : MonoBehaviour
         }
 
         var newOffset = new Vector3(newXOffset, newYOffset, newZOffset);
+        newOffset.z = (newOffset.z < 0.5f) ? 0.5f : newOffset.z;
         log += $"\nnewOffset: {newOffset}";
 
+        if (newOffset.sqrMagnitude == 0)
+        {
+            log += "\nnewOffset's length is 0 aka position (0,0,0). Not continuing.";
+            Debug.Log(log);
+            return;
+        }
+        
 
         // ---- SPATIAL THRESHOLD ---
         // the new offset vector needs to be at least 0.2 different to the current offset vector
         var offsetDiff = Vector3.Distance(curOffset, newOffset);
-        log += $"\noffsetDiff: {offsetDiff}";
-        if (offsetDiff > 0.2f)
+
+        Vector3 offset = curOffset - newOffset;
+        float sqrLen = offset.sqrMagnitude;
+
+        log += $"\noffsetDiff: {sqrLen}";
+        //if (offsetDiff > 0.2f)
+        if (sqrLen > 0.4f)
         {
-            log += "\nOffset has changed.";
+            newOffset.z = (newOffset.z < 0.7f) ? 0.7f : newOffset.z;
+            log += "\nOffset has changed enough. Updating.";
             StartCoroutine(MoveLocalOffset(orbital, curOffset, newOffset, billboard));
+            tbh.ThunderboardInfoBox.SetActive(true);
             tbh.TBCurrentLocalOffsetInWorld = newOffset;
             tbh.SetOffsetText();
             tbh.SetAngleText();
@@ -368,7 +386,7 @@ public class PositionHandler : MonoBehaviour
            
         } else
         {
-            log += "\nOffset has not changed. Not updating.";
+            log += "\nOffset has not changed enough. Not updating.";
         }
         log += "\n---------- UpdateLocalOffset ------------ end ---";
         Debug.Log(log);
@@ -395,6 +413,19 @@ public class PositionHandler : MonoBehaviour
         _lastOffsetUpdateTime = DateTime.UtcNow;
     }
 
+
+    /// <summary>
+    /// Calculates the TB's InfoBox's current position in camera space. 
+    /// This allows a comparison with the current/new offset which is in the same space.
+    /// </summary>
+    /// <param name="tbh"></param>
+    /// <returns>The position of the InfoBox in camera space.</returns>
+    public Vector3 TBsCurrentPositionInCameraCoordinates(ThunderboardHandler tbh)
+    {
+        var tbhPosition = tbh.ThunderboardInfoBox.transform.position;
+        var curPositionInCamLocalSpace = HL2Camera.transform.InverseTransformPoint(tbhPosition);
+        return curPositionInCamLocalSpace;
+    }
 
 
     /// <summary>

@@ -32,8 +32,8 @@ public class ThunderboardHandler : MonoBehaviour
 
     [Header("Parameters")]
     public float AngleOfArrival = 0.0f;
-    public string ThunderboardID;
-    public string ThingURI;
+    public string ThunderboardID = null;
+    public string ThingURI = null;
     public DateTime LastAoAUpdate;
     public DateTime LastYoloUpdate;
     public Vector2 BBoxPixelTopLeft = new Vector2(0, 0);
@@ -45,8 +45,8 @@ public class ThunderboardHandler : MonoBehaviour
     public (Vector3 offset, DateTime timestamp) LastAoAOffset;
 
 
-    public bool SetNewPositionFromAoA = false;
-    public bool SetNewPositionFromYolo = false;
+    public static bool SetNewPositionFromAoA;
+    public static bool SetNewPositionFromYolo;
     //public float newAngle;
 
     // Start is called before the first frame update
@@ -60,41 +60,30 @@ public class ThunderboardHandler : MonoBehaviour
         }
         if (PositionHandler == null)
         {
-            var allTBHScripts = GameObject.FindGameObjectsWithTag("PositionHandler");
-            PositionHandler = allTBHScripts[0].GetComponent<PositionHandler>();
+            var allPosHandlers = GameObject.FindGameObjectsWithTag("PositionHandler");
+            PositionHandler = allPosHandlers[0].GetComponent<PositionHandler>();
+            Debug.Log($"position Handler: {PositionHandler}"); 
         }
+
+        Debug.Log($"position Handler: {PositionHandler}");
         LastYoloUpdate = DateTime.UtcNow;
         LastAoAUpdate = DateTime.UtcNow;
-    }
+        SetNewPositionFromAoA = false;
+        SetNewPositionFromYolo = false;
+}
 
     // Update is called once per frame
     void Update()
     {
-        if (SetNewPositionFromAoA)
-        {
-            if (!PositionHandler.CameraIsMovingTooMuch())
-            {
-                CalculateNewOffsetFromAoA();
-            } else
-            {
-                Debug.Log("AoA: Camera is moving tooo much. Not updating the offset.");
-            }            
-            SetNewPositionFromAoA = false;
-        }
-        else if (SetNewPositionFromYolo)
-        {
-            if (!PositionHandler.CameraIsMovingTooMuch())
-            {
-                CalculateNewOffsetFromYolo();
-            }
-            else
-            {
-                Debug.Log("Yolo: Camera is moving tooo much. Not updating the offset.");
-            }
-            SetNewPositionFromYolo = false;
+      
 
-
+        //*
+        if ((DateTime.UtcNow - LastYoloUpdate).TotalSeconds > 10 && (DateTime.UtcNow - LastAoAUpdate).TotalSeconds > 10) {
+            Debug.Log($"Removing tb because of inactivity: {ThunderboardID}/{ThingURI}");
+            ThunderboardInfoBox.SetActive(false);
+            RemoveInfoBox(ThunderboardInfoBox);
         }
+        //*/
     }
 
 
@@ -125,12 +114,14 @@ public class ThunderboardHandler : MonoBehaviour
         AngleOfArrival = aoa;
         ThunderboardID = id;
         SetNewPositionFromAoA = true;
+        SetNewPosition();
         SetIDText();
-        SetAngleText();
-        SetOffsetText();
+        //SetAngleText();
+        //SetOffsetText();
         SetSensorText();
-        ThunderboardInfoBox.SetActive(true);
+        //ThunderboardInfoBox.SetActive(true);
         LastAoAUpdate = DateTime.UtcNow;
+        Debug.Log("--- UpdateFromMQTTMessage --- end ---");
     }
 
 
@@ -144,18 +135,64 @@ public class ThunderboardHandler : MonoBehaviour
     /// <param name="thingURI"></param>
     public void UpdateParametersFromYoloResult(Vector2 pixelTL, Vector2 pixelBR, Vector3 worldTL, Vector3 worldBR, string thingURI)
     {
+        var log = "--- UpdateParametersFromYoloResult ---";
         BBoxPixelTopLeft = pixelTL;
         BBoxPixelBottomRight = pixelBR;
         BBoxWorldTopLeft = worldTL;
         BBoxWorldBottomRight = worldBR;
         ThingURI = thingURI;
         SetNewPositionFromYolo = true;
+        log += $"\nSetNewPositionFromYolo: {SetNewPositionFromYolo}";
+        SetNewPosition();
         SetThingURIText();
-        SetCoordiantesText();
-        SetIDText();
-        ThunderboardInfoBox.SetActive(true);
+        //SetCoordiantesText();
+        SetIDText(); 
         LastYoloUpdate = DateTime.UtcNow;
+        log +="\n--- UpdateParametersFromYoloResult --- end ---";
+        Debug.Log(log);
+    }
 
+    private void SetNewPosition()
+    {
+        Debug.Log("set new position");
+        if (SetNewPositionFromAoA)
+        {
+            if (!PositionHandler.CameraIsMovingTooMuch())
+            {
+                CalculateNewOffsetFromAoA();
+            }
+            else
+            {
+                Debug.Log("AoA: Camera is moving tooo much. Not updating the offset.");
+            }
+            SetNewPositionFromAoA = false;
+        }
+
+        if (SetNewPositionFromYolo)
+        {
+            if (PositionHandler == null)
+            {
+                var allPosHandlers = GameObject.FindGameObjectsWithTag("PositionHandler");
+                PositionHandler = allPosHandlers[0].GetComponent<PositionHandler>();
+                Debug.Log($"position Handler: {PositionHandler}");
+            }
+
+            Debug.Log($"SetNewPositionFromYolo: {SetNewPositionFromYolo}");
+            if (!PositionHandler.CameraIsMovingTooMuch())
+            {
+                Debug.Log($"!PositionHandler.CameraIsMovingTooMuch(): {!PositionHandler.CameraIsMovingTooMuch()}");
+                CalculateNewOffsetFromYolo();
+            }
+            else
+            {
+                Debug.Log("Yolo: Camera is moving too much. Not updating the offset.");
+            }
+            SetNewPositionFromYolo = false;
+        }
+        else
+        {
+            Debug.Log($"SetNewPositionFromYolo: {SetNewPositionFromYolo}");
+        }
     }
 
 
@@ -243,6 +280,7 @@ public class ThunderboardHandler : MonoBehaviour
         //if (!zHasChangedMuch)
         //{
         LastYoloOffset = (newLocalOffset, LastYoloUpdate);
+        ThunderboardInfoBox.SetActive(true);
         PositionHandler.UpdateLocalOffsetSensorFusion(this, orbital, billboard);
         //StartCoroutine(PositionHandler.MoveLocalOffset(orbital, curLocalOffset, newLocalOffset, billboard));
         //LastYoloUpdate = DateTime.UtcNow;

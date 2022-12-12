@@ -106,6 +106,7 @@ public class HTTPListener : MonoBehaviour
                 var bBoxCoordTLy = int.Parse(context.Request.QueryString["coordTLy"]);
                 var bBoxCoordBRx = int.Parse(context.Request.QueryString["coordBRx"]);  // bottom right x-value
                 var bBoxCoordBRy = int.Parse(context.Request.QueryString["coordBRy"]);
+                var numThings = int.Parse(context.Request.QueryString["numberOfThingsInScene"]);
 
                 Vector2 bBoxCoordTL = new Vector2(bBoxCoordTLx, bBoxCoordTLy);
                 Vector2 bBoxCoordBR = new Vector2(bBoxCoordBRx, bBoxCoordBRy);
@@ -114,9 +115,10 @@ public class HTTPListener : MonoBehaviour
 
                 ThunderboardHandlerList.TempBBoxCoordTL = bBoxCoordTL;
                 ThunderboardHandlerList.TempBBoxCoordBR = bBoxCoordBR;
-
                 ThunderboardHandlerList.TempThingURI = firstKey;
                 ThunderboardHandlerList.NewYoloResultArrived = true;
+                ThunderboardHandlerList.numberOfThingsCurrentlyInScene = numThings;
+                Debug.Log($"numberOfThingsCurrentlyInScene: {numThings}");
             }
             else if (firstKey.StartsWith("frame"))
             {
