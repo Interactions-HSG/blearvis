@@ -220,7 +220,7 @@ namespace M2MqttUnity.Examples
 
             if (topic.StartsWith("estimator/angle"))
             {
-                thunderboardHandlerListScript.HandleIncomingMQTTMessage(topic, msg);
+                thunderboardHandlerListScript.HandleIncomingAoAFromMQTT(topic, msg);
 
 
             }

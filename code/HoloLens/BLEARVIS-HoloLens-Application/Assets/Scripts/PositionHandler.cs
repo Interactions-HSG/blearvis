@@ -68,7 +68,7 @@ public class PositionHandler : MonoBehaviour
         var distanceToLastPosition = Vector3.Distance(_lastCameraPosition, _mainCamera.transform.position);
         log += $"\ndistanceToLastPosition: {distanceToLastPosition}";
 
-        if (distanceToLastPosition > 0.01)
+        if (distanceToLastPosition > 0.02)
         {
             isMovingTooMuch = true;
         }
@@ -175,9 +175,12 @@ public class PositionHandler : MonoBehaviour
     /// <returns></returns>
     public Vector3 ScreenToCameraPointThroughRaycast(Vector2 newPos)
     {
+        string log = "--- ScreenToCameraPointThroughRaycast ---";
+
         /* ----------------- ↓ PROBABLY NOT needed anymore ↓ ------------------------------- */
+        /*
         var cameraTransform = Camera.main.transform;
-        string log = "--- ScreenToWorldPointRaycast ---";
+       
 
         //1280x720
         // following this paper "Augmented Reality Controlled Smart Wheelchair Using Dynamic Signifiers for Affordance Representation"
@@ -235,15 +238,15 @@ public class PositionHandler : MonoBehaviour
             raycastDirection = newPosinWorldCoord;
         }
         //log += $"\nraycastStart: {raycastDirection}";
-
+        //*/
         /* ----------------- ↑ PROBABLY NOT needed anymore ↑ ------------------------------- */
 
 
         /* ----------------- ↓ ALL WE need ↓ ------------------------------- */
 
 
-        // Yolo coordinates: (0,0) top left (640,360) bottom right
-        // HL2camera coordinates: (0,0) bottom left (640,360) top right
+        // Yolo coordinates: (0,0) top left (1280,720) bottom right
+        // HL2camera coordinates: (0,0) bottom left (1280,720) top right
         var newPosYFlipped = new Vector2(newPos.x, HL2Camera.pixelHeight - newPos.y);
         log += $"\nnewPosYFlipped: {newPosYFlipped}";
 
@@ -305,7 +308,7 @@ public class PositionHandler : MonoBehaviour
         log += $"\nlastAoAOffset: {lastAoAOffset}";
         log += $"\nlastAoATime: {lastAoATime}";
 
-        var curOffset = tbh.TBCurrentLocalOffsetInWorld;
+        var curOffset = TBsCurrentPositionInCameraSpace(tbh); ;
         log += $"\ncurOffset: {curOffset}";
         var newXOffset = curOffset.x;
         var newYOffset = curOffset.y;
@@ -327,8 +330,8 @@ public class PositionHandler : MonoBehaviour
         // ---- TEMPORAL THRESHOLD ---
         // - the last time the offset was changed needs to be older than 1 second
         // - the last received offset need to be younger than 3 seconds to be considered
-        var lastYoloTimeDiffs = (lastOffsetUpdateTimeDiff > 1) && (lastYoloReceivedTimeDiffSeconds < 3);
-        var lastAoATimeDiffs = (lastOffsetUpdateTimeDiff > 1) && (lastAoAReceivedTimeDiffSeconds < 3);
+        var lastYoloTimeDiffs = (lastOffsetUpdateTimeDiff > 0.5) && (lastYoloReceivedTimeDiffSeconds < 3);
+        var lastAoATimeDiffs = (lastOffsetUpdateTimeDiff > 0.5) && (lastAoAReceivedTimeDiffSeconds < 3);
 
         if (lastYoloTimeDiffs  && lastAoATimeDiffs)
         {
@@ -362,20 +365,21 @@ public class PositionHandler : MonoBehaviour
             Debug.Log(log);
             return;
         }
-        
+
 
         // ---- SPATIAL THRESHOLD ---
-        // the new offset vector needs to be at least 0.2 different to the current offset vector
-        var offsetDiff = Vector3.Distance(curOffset, newOffset);
 
-        Vector3 offset = curOffset - newOffset;
-        float sqrLen = offset.sqrMagnitude;
+        // var offsetDiff = Vector3.Distance(curOffset, newOffset);
+
+        // the new offset vector needs to be at least 0.2*0.2 different to the current offset vector
+        Vector3 offsetDiff = curOffset - newOffset;
+        float sqrLen = offsetDiff.sqrMagnitude;
 
         log += $"\noffsetDiff: {sqrLen}";
         //if (offsetDiff > 0.2f)
         if (sqrLen > 0.4f)
         {
-            newOffset.z = (newOffset.z < 0.7f) ? 0.7f : newOffset.z;
+            //newOffset.z = (newOffset.z < 0.7f) ? 0.7f : newOffset.z;
             log += "\nOffset has changed enough. Updating.";
             StartCoroutine(MoveLocalOffset(orbital, curOffset, newOffset, billboard));
             tbh.ThunderboardInfoBox.SetActive(true);
@@ -420,7 +424,7 @@ public class PositionHandler : MonoBehaviour
     /// </summary>
     /// <param name="tbh"></param>
     /// <returns>The position of the InfoBox in camera space.</returns>
-    public Vector3 TBsCurrentPositionInCameraCoordinates(ThunderboardHandler tbh)
+    public Vector3 TBsCurrentPositionInCameraSpace(ThunderboardHandler tbh)
     {
         var tbhPosition = tbh.ThunderboardInfoBox.transform.position;
         var curPositionInCamLocalSpace = HL2Camera.transform.InverseTransformPoint(tbhPosition);

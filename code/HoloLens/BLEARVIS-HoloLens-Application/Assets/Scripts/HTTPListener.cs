@@ -100,7 +100,7 @@ public class HTTPListener : MonoBehaviour
             // https://blarvis.interactions.ics.unisg.ch/card
             // https://blarvis.interactions.ics.unisg.ch/lamp
             // https://blarvis.interactions.ics.unisg.ch/mac
-            if (firstKey.StartsWith("https://blarvis"))
+            if (firstKey.StartsWith("https://blarvis") && firstValue == "1")
             {
                 var bBoxCoordTLx = int.Parse(context.Request.QueryString["coordTLx"]);  // top left x-value
                 var bBoxCoordTLy = int.Parse(context.Request.QueryString["coordTLy"]);

@@ -29,6 +29,8 @@ public class ThunderboardHandlerList : MonoBehaviour
     public float GlobalTbhYValue = 0;
     public float GlobalTbhZValue = 1;
 
+    public int tbhCounter = 0;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -75,7 +77,7 @@ public class ThunderboardHandlerList : MonoBehaviour
 
     public void TestNewMessage(string angle)
     {
-        HandleIncomingMQTTMessage("estimator/angle/ble-pd-60A423C98C93", angle);
+        HandleIncomingAoAFromMQTT("estimator/angle/ble-pd-60A423C98C93", angle);
     }
 
     public void TestRaycast(GameObject g)
@@ -103,7 +105,7 @@ public class ThunderboardHandlerList : MonoBehaviour
     /// </summary>
     /// <param name="topic"></param>
     /// <param name="msg"></param>
-    public void HandleIncomingMQTTMessage(string topic, string msg)
+    public void HandleIncomingAoAFromMQTT(string topic, string msg)
     {
         if (!handleIncomingAoAResult)
         {
@@ -130,6 +132,7 @@ public class ThunderboardHandlerList : MonoBehaviour
             if (matchingTBH == null)
             {
                 Debug.Log("TBH did not exist, creating one");
+                tbhCounter++;
                 //var newPrefabInstance = Instantiate(thunderboardInfoBoxPrefab, new Vector3(0, 0, 0), Quaternion.identity);
                 var newPrefabInstance = Instantiate(thunderboardInfoBoxOrbitalPrefab, new Vector3(0, 0, 0), Quaternion.identity);
                 newPrefabInstance.transform.localRotation = Quaternion.identity;
@@ -137,22 +140,58 @@ public class ThunderboardHandlerList : MonoBehaviour
                 matchingTBH = newPrefabInstance.GetComponent<ThunderboardHandler>();
                 matchingTBH.ThunderboardInfoBox.SetActive(false);
                 matchingTBH.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset = new Vector3(0,0,1);
+                matchingTBH.SerialNumber = tbhCounter;
                 thunderboardHandlerList.Add(matchingTBH);
+                
             }
             //tbh.TBCurrentLocalOffsetInWorld = newOffset;
             //tbh.thunderboardPositionInWorldCoords = newPosition;
         }
        
-        matchingTBH.UpdateFromMQTTMessage(newAngle, idFromSubTopic);
+        matchingTBH.UpdateFromAoAMQTTMessage(newAngle, idFromSubTopic);
     }
 
 
-    /// <summary>
-    /// Handles an Incoming Yolo result. The two boundingbox coordinate pairs are attached to a new/existing thunderboardHandler.
-    /// </summary>
-    /// <param name="bBoxCoordTL">top left</param>
-    /// <param name="bBoxCoordBR">bottom right</param>
-    public void HandleIncomingYoloResult(Vector2 bBoxCoordTL, Vector2 bBoxCoordBR, string thingURI)
+    public void HandleIncomingSensorDataFromMQTT(string topic, string msg)
+    {
+        if (!handleIncomingAoAResult)
+        {
+            Debug.Log("handling AoA+MQTT result is paused.");
+            return;
+        }
+        // topic looks like this: sensor/temp/ble-pd-60A423C98C93
+        // the ID is the last part: 60A423C98C93
+        var msgSplit = topic.Split('/');
+
+        var sensorType = msgSplit[1];
+        var id = msgSplit[2].Split('-')[2];
+        Debug.Log($"received new sensor data for ({id}): {msg}");
+
+        ThunderboardHandler matchingTBH = ReturnThunderboardHandlerFromListIfExists(id);
+
+        if (matchingTBH == null)
+        {
+            Debug.Log("no matching tbh found for sensor data");
+            return;
+        } else
+        {
+            if (float.TryParse(msg, out float value))
+            {
+                Debug.Log("parsed float, updating");
+                matchingTBH.UpdateFromSensorDataMQTTMessage(sensorType, value);
+            }
+            
+        }
+
+
+    }
+
+        /// <summary>
+        /// Handles an Incoming Yolo result. The two boundingbox coordinate pairs are attached to a new/existing thunderboardHandler.
+        /// </summary>
+        /// <param name="bBoxCoordTL">top left</param>
+        /// <param name="bBoxCoordBR">bottom right</param>
+        public void HandleIncomingYoloResult(Vector2 bBoxCoordTL, Vector2 bBoxCoordBR, string thingURI)
     {
         string log = "--- HandleIncomingYoloResult ---";
 
@@ -189,10 +228,14 @@ public class ThunderboardHandlerList : MonoBehaviour
             matchingTBH.ThunderboardInfoBox.SetActive(false);
             matchingTBH.ThunderboardID = "undefined";
             matchingTBH.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset = new Vector3(0, 0, 1);
+            matchingTBH.SerialNumber = tbhCounter;
             thunderboardHandlerList.Add(matchingTBH);
+            log += $"\nadded new tbh: {thunderboardHandlerList[thunderboardHandlerList.Count - 1]}";
+            tbhCounter++;
         }
         if (matchingTBH != null)
         {
+            log += "\nmatchinTBH != null";
             matchingTBH.UpdateParametersFromYoloResult(bBoxCoordTL, bBoxCoordBR, bBoxCameraSpaceTL, bBoxCamerSpaceBR, thingURI);
         } else
         {
@@ -220,7 +263,7 @@ public class ThunderboardHandlerList : MonoBehaviour
     /// <returns></returns>
     public ThunderboardHandler GetClosestTBHForYoloResult(Vector3 bboxCameraSpaceTopLeft, Vector3 bboxCameraSpaceBottomRight, string thingUri)
     {
-        var maxDistanceFromExistingTBsCenter = 1f;
+        var maxDistanceFromExistingTBsCenter = 2f;
         //var maxDistanceFromExistingTBsCenterX = 0.5f;
         ThunderboardHandler matchingTBH = null;
         string log = "--- GetClosestTBHForYoloResult ---";
@@ -234,7 +277,7 @@ public class ThunderboardHandlerList : MonoBehaviour
 
             //Vector2 curTBPos = new Vector2(tbh.TBCurrentLocalOffsetInWorld.x, tbh.TBCurrentLocalOffsetInWorld.y);
 
-            var curTBPositioninCameraSpace = PositionHandler.TBsCurrentPositionInCameraCoordinates(tbh);
+            var curTBPositioninCameraSpace = PositionHandler.TBsCurrentPositionInCameraSpace(tbh);
             log += $"\ncurTBPositioninCameraSpace: {curTBPositioninCameraSpace}";
 
 
@@ -329,7 +372,7 @@ public class ThunderboardHandlerList : MonoBehaviour
             var curTBHOffset = tbh.TBCurrentLocalOffsetInWorld;
             log += $"\ncurrent saved TB offset: {curTBHOffset}";
 
-            var curTBPositioninCameraSpace = PositionHandler.TBsCurrentPositionInCameraCoordinates(tbh);
+            var curTBPositioninCameraSpace = PositionHandler.TBsCurrentPositionInCameraSpace(tbh);
             log += $"\ncurTBPositioninCameraSpace: {curTBPositioninCameraSpace}";
 
             //Vector2 curTBPos = new Vector2(tbh.thunderboardPositionInWorldCoords.x, tbh.thunderboardPositionInWorldCoords.y);

@@ -19,9 +19,11 @@ public class ThunderboardHandler : MonoBehaviour
     public GameObject ThingURIText;
     public GameObject IDText;
     public GameObject AngleText;
-    public GameObject SensorText;
+    public GameObject SensorTextTemperature;
+    public GameObject SensorTextHumidity;
     public GameObject PositionText;
     public GameObject CoordinatesText;
+    public GameObject SerialNumberText;
 
     [Header("Prefab")]
     public GameObject ThunderboardInfoBoxPrefab;
@@ -32,6 +34,9 @@ public class ThunderboardHandler : MonoBehaviour
 
     [Header("Parameters")]
     public float AngleOfArrival = 0.0f;
+    public (float temperature, float humidity) SensorData;
+    public DateTime LastTemperatureSensorUpdate;
+    public DateTime LastHumiditySensorUpdate;
     public string ThunderboardID = null;
     public string ThingURI = null;
     public DateTime LastAoAUpdate;
@@ -43,14 +48,14 @@ public class ThunderboardHandler : MonoBehaviour
     public Vector3 TBCurrentLocalOffsetInWorld = new Vector3(0, 0, 0);
     public (Vector3 offset, DateTime timestamp) LastYoloOffset;
     public (Vector3 offset, DateTime timestamp) LastAoAOffset;
-
+    public int SerialNumber;
 
     public static bool SetNewPositionFromAoA;
     public static bool SetNewPositionFromYolo;
     //public float newAngle;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         // there is only one thunderboardHandlerList in the scene
         if (ThunderboardHandlerList == null)
@@ -93,7 +98,7 @@ public class ThunderboardHandler : MonoBehaviour
     /// </summary>
     /// <param name="aoa">i.e. the angle f arrival</param>
     /// <param name="id">the ID from the thunderboard that has sent the message</param>
-    public void UpdateFromMQTTMessage(float aoa, string id)
+    public void UpdateFromAoAMQTTMessage(float aoa, string id)
     {
         // var currentAngle = Angle;
         // var curAngleDiff = Math.Abs(Angle - msg);
@@ -116,14 +121,54 @@ public class ThunderboardHandler : MonoBehaviour
         SetNewPositionFromAoA = true;
         SetNewPosition();
         SetIDText();
+        SetSerialNumberText();
         //SetAngleText();
         //SetOffsetText();
-        SetSensorText();
+        
         //ThunderboardInfoBox.SetActive(true);
         LastAoAUpdate = DateTime.UtcNow;
         Debug.Log("--- UpdateFromMQTTMessage --- end ---");
     }
 
+
+    /// <summary>
+    /// Receives and stores a new value from a sensor on the thunderboard.
+    /// </summary>
+    /// <param name="sensorType">can be: temperature or humidity</param>
+    /// <param name="value">the value read by the sensor</param>
+    public void UpdateFromSensorDataMQTTMessage(string sensorType, float value)
+    {
+        //LastTemperatureSensorUpdate = (LastTemperatureSensorUpdate == default(DateTime)) ? DateTime.UtcNow : LastTemperatureSensorUpdate;
+        //LastHumiditySensorUpdate = (LastHumiditySensorUpdate == default(DateTime)) ? DateTime.UtcNow : LastHumiditySensorUpdate;
+
+        if (sensorType == "temp")
+        {
+            if ((DateTime.UtcNow - LastTemperatureSensorUpdate).TotalSeconds < 0.5)
+            {
+                Debug.Log($"Last sensor update was less than 0.5s ago. Not updating.");
+                return;
+            }
+            // only update if the value has changed.
+            if (SensorData.temperature == value) { return; }
+            SensorData.temperature = value;
+            Debug.Log($"Updated temperature: {value}");
+            SetSensorTemperatureText();
+        } 
+        else if (sensorType == "hum")
+        {
+            if ((DateTime.UtcNow - LastHumiditySensorUpdate).TotalSeconds < 0.5)
+            {
+                Debug.Log($"Last sensor update was less than 0.5s ago. Not updating.");
+                return;
+            }
+            if (SensorData.humidity == value) { return; }
+            SensorData.humidity = value;
+            Debug.Log($"Updated humidity: {value}");
+            SetSensorHumidityText();
+        }
+        LastTemperatureSensorUpdate = DateTime.Now;
+
+    }
 
     /// <summary>
     /// Receives Coordinates from the YOLO result. These are saved in this ThunderboardHandler's fields.
@@ -146,10 +191,12 @@ public class ThunderboardHandler : MonoBehaviour
         SetNewPosition();
         SetThingURIText();
         //SetCoordiantesText();
-        SetIDText(); 
+        SetIDText();
+        SetSerialNumberText();
         LastYoloUpdate = DateTime.UtcNow;
         log +="\n--- UpdateParametersFromYoloResult --- end ---";
         Debug.Log(log);
+        
     }
 
     private void SetNewPosition()
@@ -379,6 +426,16 @@ public class ThunderboardHandler : MonoBehaviour
         IDText.GetComponent<TextMeshPro>().text = idT;
     }
 
+
+    /// <summary>
+    ///  Updates the "SerialNumber" text in the ThunderboardInfoBox
+    /// </summary>
+    public void SetSerialNumberText()
+    {
+        var snT = $"No.: {SerialNumber} ";
+        SerialNumberText.GetComponent<TextMeshPro>().text = snT;
+    }
+
     /// <summary>
     ///  Updates the "Angel of Arrival" text in the ThunderboardInfoBox
     /// </summary>
@@ -396,6 +453,8 @@ public class ThunderboardHandler : MonoBehaviour
         var coords = $"Offset:<space=7.4em> {TBCurrentLocalOffsetInWorld} ";
         PositionText.GetComponent<TextMeshPro>().text = coords;
     }
+
+
     /// <summary>
     /// Updates the "bounding box coordinates" text in the ThunderboardInfoBox
     /// </summary>
@@ -409,10 +468,19 @@ public class ThunderboardHandler : MonoBehaviour
     /// <summary>
     ///  Updates the "Sensor data" text in the ThunderboardInfoBox
     /// </summary>
-    public void SetSensorText()
+    public void SetSensorTemperatureText()
     {
-        var text = $"Sensor Value:<space=2em> {Mathf.Round(UnityEngine.Random.Range(15f, 35f) * 100f) / 100f} °C";
-        SensorText.GetComponent<TextMeshPro>().text = text;
+        var text = $"Temperature:<space=4em> {SensorData.temperature} °C";
+        SensorTextTemperature.GetComponent<TextMeshPro>().text = text;
+    }   
+    
+    /// <summary>
+    ///  Updates the "Sensor data" text in the ThunderboardInfoBox
+    /// </summary>
+    public void SetSensorHumidityText()
+    {
+        var text = $"Humidity:<space=4.3em> {SensorData.humidity} %";
+        SensorTextHumidity.GetComponent<TextMeshPro>().text = text;
     }
 
     
