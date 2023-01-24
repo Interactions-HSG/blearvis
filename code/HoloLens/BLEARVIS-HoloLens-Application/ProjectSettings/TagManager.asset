@@ -6,6 +6,7 @@ TagManager:
   tags:
   - TBHList
   - PositionHandler
+  - ThingHandler
   layers:
   - Default
   - TransparentFX
