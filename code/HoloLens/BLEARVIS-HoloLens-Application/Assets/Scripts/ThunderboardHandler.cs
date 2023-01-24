@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
@@ -25,12 +26,19 @@ public class ThunderboardHandler : MonoBehaviour
     public GameObject CoordinatesText;
     public GameObject SerialNumberText;
 
+    [Header("Tractor")]
+    public GameObject TractorInfo;
+    public GameObject BatteryText;
+    public GameObject Soil;
+    public GameObject SoilText;
+
     [Header("Prefab")]
     public GameObject ThunderboardInfoBoxPrefab;
 
     [Header("Scripts")]
     public ThunderboardHandlerList ThunderboardHandlerList;
     public PositionHandler PositionHandler;
+    public ThingHandler ThingHandler;
 
     [Header("Parameters")]
     public float AngleOfArrival = 0.0f;
@@ -49,9 +57,14 @@ public class ThunderboardHandler : MonoBehaviour
     public (Vector3 offset, DateTime timestamp) LastYoloOffset;
     public (Vector3 offset, DateTime timestamp) LastAoAOffset;
     public int SerialNumber;
+    public (int ph, int moisture, int density, int nitrate) SoilCondition;
+    public float BatteryVoltage;
+    public string thingIP;
 
     public static bool SetNewPositionFromAoA;
     public static bool SetNewPositionFromYolo;
+    public bool GetDataFromThing;
+    public bool GetDataFromThingCourutineRunning;
     //public float newAngle;
 
     // Start is called before the first frame update
@@ -66,16 +79,34 @@ public class ThunderboardHandler : MonoBehaviour
         if (PositionHandler == null)
         {
             var allPosHandlers = GameObject.FindGameObjectsWithTag("PositionHandler");
+            // There is only one position Handler in the scene
             PositionHandler = allPosHandlers[0].GetComponent<PositionHandler>();
             Debug.Log($"position Handler: {PositionHandler}"); 
+        }
+        if (ThingHandler == null)
+        {
+            var allThingHandlers = GameObject.FindGameObjectsWithTag("ThingHandler");
+            // There is only one ThingHandler in the scene
+            ThingHandler = allThingHandlers[0].GetComponent<ThingHandler>();
+            Debug.Log($"ThingHandler: {ThingHandler}");
         }
 
         Debug.Log($"position Handler: {PositionHandler}");
         LastYoloUpdate = DateTime.UtcNow;
         LastAoAUpdate = DateTime.UtcNow;
+        LastHumiditySensorUpdate = DateTime.UtcNow;
+        LastTemperatureSensorUpdate = DateTime.UtcNow;
         SetNewPositionFromAoA = false;
         SetNewPositionFromYolo = false;
-}
+        GetDataFromThing = false;
+        GetDataFromThingCourutineRunning = false;
+        SoilCondition.ph = 0;
+        SoilCondition.moisture = 0;
+        SoilCondition.density = 0;
+        SoilCondition.nitrate = 0;
+        BatteryVoltage = 0;
+        thingIP = "";
+    }
 
     // Update is called once per frame
     void Update()
@@ -89,8 +120,15 @@ public class ThunderboardHandler : MonoBehaviour
             RemoveInfoBox(ThunderboardInfoBox);
         }
         //*/
+        if (!GetDataFromThingCourutineRunning)
+        {
+            GetDataFromThing = true;
+            StartCoroutine(StartGettingDataFromThing());
+        }
+
     }
 
+  
 
 
     /// <summary>
@@ -101,8 +139,8 @@ public class ThunderboardHandler : MonoBehaviour
     public void UpdateFromAoAMQTTMessage(float aoa, string id)
     {
         // var currentAngle = Angle;
-        // var curAngleDiff = Math.Abs(Angle - msg);
-        // Debug.Log($"curAngle: {currentAngle}, newAngle: {msg}, diff: {curAngleDiff}");
+        var curAngleDiff = Mathf.Abs(AngleOfArrival - aoa);
+        Debug.Log($"curAngle: {AngleOfArrival}, newAngle: {aoa}, diff: {curAngleDiff}");
 
         /*
         //  curAngle: 6.17, newAngle: -68.12, last diff: 54.29
@@ -116,17 +154,24 @@ public class ThunderboardHandler : MonoBehaviour
         }
         //*/
         //lastAngleDifference = curAngleDiff;
-        AngleOfArrival = aoa;
-        ThunderboardID = id;
-        SetNewPositionFromAoA = true;
-        SetNewPosition();
-        SetIDText();
-        SetSerialNumberText();
-        //SetAngleText();
-        //SetOffsetText();
+        if (AngleOfArrival == 0 || curAngleDiff < 30)
+        {
+            AngleOfArrival = aoa;
+            ThunderboardID = id;
+            SetNewPositionFromAoA = true;
+            SetNewPosition();
+            SetIDText();
+            SetSerialNumberText();
+            SetAngleText();
+            //SetOffsetText();
+
+            //ThunderboardInfoBox.SetActive(true);
+            LastAoAUpdate = DateTime.UtcNow;
+        } else
+        {
+            Debug.Log("AoA diff to large. not updating"); 
+        }
         
-        //ThunderboardInfoBox.SetActive(true);
-        LastAoAUpdate = DateTime.UtcNow;
         Debug.Log("--- UpdateFromMQTTMessage --- end ---");
     }
 
@@ -143,26 +188,28 @@ public class ThunderboardHandler : MonoBehaviour
 
         if (sensorType == "temp")
         {
-            if ((DateTime.UtcNow - LastTemperatureSensorUpdate).TotalSeconds < 0.5)
+            if ((DateTime.UtcNow - LastTemperatureSensorUpdate).TotalSeconds < 0.25)
             {
-                Debug.Log($"Last sensor update was less than 0.5s ago. Not updating.");
+                //Debug.Log($"Last sensor update was less than 0.5s ago. Not updating.");
                 return;
             }
             // only update if the value has changed.
             if (SensorData.temperature == value) { return; }
             SensorData.temperature = value;
             Debug.Log($"Updated temperature: {value}");
+            LastTemperatureSensorUpdate = DateTime.UtcNow;
             SetSensorTemperatureText();
         } 
         else if (sensorType == "hum")
         {
-            if ((DateTime.UtcNow - LastHumiditySensorUpdate).TotalSeconds < 0.5)
+            if ((DateTime.UtcNow - LastHumiditySensorUpdate).TotalSeconds < 0.25)
             {
-                Debug.Log($"Last sensor update was less than 0.5s ago. Not updating.");
+                //Debug.Log($"Last sensor update was less than 0.5s ago. Not updating.");
                 return;
             }
             if (SensorData.humidity == value) { return; }
             SensorData.humidity = value;
+            LastHumiditySensorUpdate = DateTime.UtcNow;
             Debug.Log($"Updated humidity: {value}");
             SetSensorHumidityText();
         }
@@ -187,6 +234,7 @@ public class ThunderboardHandler : MonoBehaviour
         BBoxWorldBottomRight = worldBR;
         ThingURI = thingURI;
         SetNewPositionFromYolo = true;
+       
         log += $"\nSetNewPositionFromYolo: {SetNewPositionFromYolo}";
         SetNewPosition();
         SetThingURIText();
@@ -210,7 +258,7 @@ public class ThunderboardHandler : MonoBehaviour
             }
             else
             {
-                Debug.Log("AoA: Camera is moving tooo much. Not updating the offset.");
+                Debug.Log("AoA: Camera is moving too much. Not updating the offset.");
             }
             SetNewPositionFromAoA = false;
         }
@@ -251,7 +299,7 @@ public class ThunderboardHandler : MonoBehaviour
     /// </summary>
     public void CalculateNewOffsetFromYolo()
     {
-        string log = $"--- SetNewPositionThunderboardInfoBoxFromBBoxCoords ---";
+        string log = $"--- CalculateNewOffsetFromYolo ---";
 
         // do a Raycast in each corner of the BoundingBox and the center.
         // choose the smalles Z -> possibly closest point of object to user
@@ -314,7 +362,8 @@ public class ThunderboardHandler : MonoBehaviour
         var newRawOffset = new Vector3(newOffsetFromRayCenter.x, newOffsetFromRayCenter.y, closestZ);
         log += $"\nnewRawOffset: {newRawOffset}";
         //newRawOffset = Camera.main.transform.position - newRawOffset;
-        var newLocalOffset = new Vector3(newRawOffset.x, newRawOffset.y+0.7f*bboxHeight, newRawOffset.z);
+        //  newRawOffset.y+0.7f*bboxHeight
+        var newLocalOffset = new Vector3(newRawOffset.x, newRawOffset.y, newRawOffset.z);
         //var newLocalOffset = new Vector3(newRawOffset.x, newRawOffset.y, newZ);
         log += $"\nnewLocalOffset: {newLocalOffset}";
 
@@ -338,7 +387,7 @@ public class ThunderboardHandler : MonoBehaviour
         // orbital.LocalOffset = newLocalOffset;
 
         SetOffsetText();
-        log += $"\n--- SetNewPositionThunderboardInfoBoxFromBBoxCoords --- end ---";
+        log += $"\n--- CalculateNewOffsetFromYolo --- end ---";
         Debug.Log(log);
 
     }
@@ -353,7 +402,7 @@ public class ThunderboardHandler : MonoBehaviour
         try
         {
 
-            string log = $"--- SetNewPositionThunderboardInfoBoxFromAngle ---";
+            string log = $"--- CalculateNewOffsetFromAoA ---";
 
             var newOffset = PositionHandler.CalculateLocalOffsetFromAngle(AngleOfArrival);
             newOffset = new Vector3(newOffset.x, 0, newOffset.z);
@@ -394,7 +443,7 @@ public class ThunderboardHandler : MonoBehaviour
 
            
 
-            log += $"--- SetNewPositionThunderboardInfoBoxFromAngle --- end ---";
+            log += $"--- CalculateNewOffsetFromAoA --- end ---";
             Debug.Log(log);
 
         }
@@ -405,6 +454,54 @@ public class ThunderboardHandler : MonoBehaviour
 
     }
 
+
+    IEnumerator StartGettingDataFromThing()
+    {
+        if (thingIP == "")
+        {
+            yield return null;
+        }
+        Debug.Log($"GetDataFromThing: {GetDataFromThing}");
+        while (GetDataFromThing)
+        {
+            Debug.Log("StartGettingDataFromThing --- start ---");
+            GetDataFromThingCourutineRunning = true;
+            Task task = ThingHandler.GetBatteryVoltageFromThing(thingIP, this);
+            Task task2 = ThingHandler.GetSoilconditionFromThing(thingIP, this);
+            yield return new WaitUntil(() => task.IsCompleted && task2.IsCompleted);
+            if (BatteryVoltage != 0f)
+            {
+                Debug.Log("new battery voltage");
+                SetBatteryVoltageText();
+                TractorInfo.SetActive(true);
+            }
+
+            if (SoilCondition.ph != 0f || SoilCondition.moisture != 0f || SoilCondition.density != 0f || SoilCondition.nitrate != 0f )
+            {
+                Debug.Log("new soil condition");
+                SetSoilconditionText();
+                Soil.SetActive(true);
+                TractorInfo.SetActive(true);
+            } else
+            {
+                Soil.SetActive(false);
+            }
+            yield return new WaitForSeconds(1f);
+        }
+        GetDataFromThingCourutineRunning = false;
+    }
+
+    public void SetBatteryVoltageText()
+    {
+        var batteryText = $"{BatteryVoltage} V";
+        BatteryText.GetComponent<TextMeshPro>().text = batteryText;
+    }
+
+    public void SetSoilconditionText()
+    {
+        var soilText = $"{SoilCondition.ph}\n{SoilCondition.moisture}\n{SoilCondition.density}\n{SoilCondition.nitrate}\n";
+        SoilText.GetComponent<TextMeshPro>().text = soilText;
+    }
 
 
     /// <summary>
@@ -437,7 +534,7 @@ public class ThunderboardHandler : MonoBehaviour
     }
 
     /// <summary>
-    ///  Updates the "Angel of Arrival" text in the ThunderboardInfoBox
+    ///  Updates the "Angle of Arrival" text in the ThunderboardInfoBox
     /// </summary>
     public void SetAngleText()
     {

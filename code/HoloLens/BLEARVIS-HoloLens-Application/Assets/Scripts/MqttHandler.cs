@@ -46,7 +46,8 @@ namespace M2MqttUnity.Examples
     {
         
         [Header("Custom for BLEARVIS")]
-        public string MyTopic;
+        public string AoATopic;
+        public string SensorDataTopic;
 
         //public ThunderboardHandler thunderboardHandler;
 
@@ -77,13 +78,14 @@ namespace M2MqttUnity.Examples
 
         protected override void SubscribeTopics()
         {
-            client.Subscribe(new string[] { MyTopic }, new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
+            client.Subscribe(new string[] { AoATopic }, new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
+            client.Subscribe(new string[] { SensorDataTopic }, new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
             Debug.Log("Subscribed to topics.");
         }
 
         protected override void UnsubscribeTopics()
         {
-            client.Unsubscribe(new string[] { MyTopic });
+            client.Unsubscribe(new string[] { AoATopic, SensorDataTopic });
             Debug.Log("Unubscribed to topics.");
         }
 
@@ -112,12 +114,12 @@ namespace M2MqttUnity.Examples
 
         protected override void DecodeMessage(string topic, byte[] message)
         {
-            Debug.Log("received new message");
+            //Debug.Log("received new message");
             string msg = System.Text.Encoding.UTF8.GetString(message);
 
             if (msg == null || msg == "") return;
 
-            Debug.Log($"topic: {topic}");
+            //Debug.Log($"topic: {topic}");
 
             if (topic.StartsWith("estimator/angle"))
             {
