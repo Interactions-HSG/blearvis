@@ -50,9 +50,53 @@ public class PositionHandler : MonoBehaviour
             NewYoloFrameDimensions = false;
         }
         
-        
+    }
 
-        
+    private void FixedUpdate()
+    {
+        CheckCameraVelocity();
+    }
+
+    private void CheckCameraVelocity()
+    {
+
+        Quaternion deltaRotation = _mainCamera.transform.rotation * Quaternion.Inverse(_lastCameraRotation);
+        string log = "--- CheckCamerasAngularVelocity ---";
+        log += $"\nlastCameraRotation: {_lastCameraRotation}";
+        log += $"\ncurCameraRotation: {_mainCamera.transform.rotation}";
+        _lastCameraRotation = _mainCamera.transform.rotation;
+
+        deltaRotation.ToAngleAxis(out var angle, out var axis);
+
+        angle *= Mathf.Deg2Rad;
+
+        var angularVelocity = (1.0f / Time.deltaTime) * angle * axis;
+        log += $"\nangularVelocity: {angularVelocity}";
+
+        // This camera's motion in units per second as it was during the last frame. 
+        // probably translation velocity
+        var camVelocity = _mainCamera.velocity;
+        log += $"\ncamVelocity: {camVelocity}";
+
+        var angularVelocityIsTooHigh = Mathf.Abs(angularVelocity.x) > 0.5f   // 0.25
+                                        || Mathf.Abs(angularVelocity.y) > 0.5f    
+                                        || Mathf.Abs(angularVelocity.z) > 0.5f;
+        var velocityIsTooHigh = Mathf.Abs(camVelocity.x) > 0.5f       // 0.27
+                                || Mathf.Abs(camVelocity.y) > 0.5f        
+                                || Mathf.Abs(camVelocity.z) > 0.5f;
+
+        if (angularVelocityIsTooHigh || velocityIsTooHigh)
+        {
+            log += $"\nAVtooHigh: {angularVelocityIsTooHigh}";
+            log += $"\nVtooHigh: {velocityIsTooHigh}";
+            _cameraIsMovingTooMuch = true;
+        } else
+        {
+            _cameraIsMovingTooMuch = false;
+        }
+        log += $"\n_cameraIsMovingTooMuch: {_cameraIsMovingTooMuch}";
+        Debug.Log(log);
+
     }
 
     /// <summary>
@@ -68,7 +112,7 @@ public class PositionHandler : MonoBehaviour
         var distanceToLastPosition = Vector3.Distance(_lastCameraPosition, _mainCamera.transform.position);
         log += $"\ndistanceToLastPosition: {distanceToLastPosition}";
 
-        if (distanceToLastPosition > 0.02)
+        if (distanceToLastPosition > 0.03)
         {
             isMovingTooMuch = true;
         }
@@ -92,11 +136,14 @@ public class PositionHandler : MonoBehaviour
         {
             isMovingTooMuch = true;
         }
-        _lastCameraRotation = _mainCamera.transform.rotation;
+        // _lastCameraRotation = _mainCamera.transform.rotation;
         log += $"\nisMoving: {isMovingTooMuch}";
+        log += $"\n_cameraIsMovingTooMuch: {_cameraIsMovingTooMuch}";
         log += "\n----- CameraIsMovingTooMuch ----- end ---";
+        
         Debug.Log(log);
-        return isMovingTooMuch;
+
+        return _cameraIsMovingTooMuch;
     }
 
 
@@ -108,7 +155,7 @@ public class PositionHandler : MonoBehaviour
     public Vector3 CalculateLocalOffsetFromAngle(float angle)
     {
 
-        var newPosition = new Vector3(0, 0, 1);
+        var newPosition = new Vector3(0, 0, 0);
         string log = "--- CalculatePositionFromAngle --";
         // tan(angle) = x/y
         // -> x = tan(angle) * y
@@ -330,16 +377,19 @@ public class PositionHandler : MonoBehaviour
         // ---- TEMPORAL THRESHOLD ---
         // - the last time the offset was changed needs to be older than 1 second
         // - the last received offset need to be younger than 3 seconds to be considered
-        var lastYoloTimeDiffs = (lastOffsetUpdateTimeDiff > 0.5) && (lastYoloReceivedTimeDiffSeconds < 3);
-        var lastAoATimeDiffs = (lastOffsetUpdateTimeDiff > 0.5) && (lastAoAReceivedTimeDiffSeconds < 3);
+        var lastYoloTimeDiffs = (lastOffsetUpdateTimeDiff > 0.05) && (lastYoloReceivedTimeDiffSeconds < 3);
+        var lastAoATimeDiffs = (lastOffsetUpdateTimeDiff > 0.05) && (lastAoAReceivedTimeDiffSeconds < 3);
 
         if (lastYoloTimeDiffs  && lastAoATimeDiffs)
         {
             log += "\nUpdating offset from both";
             // we assume that the offset from Yolo is more accurate
-            newXOffset = Mathf.Lerp(lastYoloOffset.x, lastAoAOffset.x, 0.3f);
+            var xInterpolated = Mathf.Lerp(lastYoloOffset.x, lastAoAOffset.x, 0.5f);
+            newXOffset = xInterpolated;
             newYOffset = lastYoloOffset.y;
-            newZOffset = Mathf.Lerp(lastYoloOffset.z, lastAoAOffset.z, 0.3f);
+            var yInterpolated = Mathf.Lerp(lastYoloOffset.z, lastAoAOffset.z, 0.5f);
+            newZOffset = yInterpolated;
+            Debug.Log($"interpolated, x: {xInterpolated}, y: {yInterpolated}");
 
         } else if (lastYoloTimeDiffs && (lastAoAReceivedTimeDiffSeconds > 3) )
         {
@@ -351,13 +401,29 @@ public class PositionHandler : MonoBehaviour
         {
             log += "\nUpdating offset from AoA";
             newXOffset = lastAoAOffset.x;
-            newYOffset = 0;
+            newYOffset = 0f;
             newZOffset = lastAoAOffset.z;
         }
+
+        
+
 
         var newOffset = new Vector3(newXOffset, newYOffset, newZOffset);
         newOffset.z = (newOffset.z < 0.5f) ? 0.5f : newOffset.z;
         log += $"\nnewOffset: {newOffset}";
+
+        // if another TBH is already at the same position, move the new TBH a bit away
+        var closestTBH = thunderboardHandlerList.GetClosestTBHForNewAoA(newOffset, 1f);
+        if (closestTBH != null)
+        {
+            var closestPos = TBsCurrentPositionInCameraSpace(closestTBH);
+
+            if (closestPos.z - newOffset.z < 0.1)
+            {
+                newOffset.z = closestPos.z + 0.1f;
+            }
+        }
+       
 
         if (newOffset.sqrMagnitude == 0)
         {

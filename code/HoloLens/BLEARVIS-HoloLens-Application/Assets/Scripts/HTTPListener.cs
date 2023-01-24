@@ -25,7 +25,7 @@ public class HTTPListener : MonoBehaviour
         var ip = GetIP4Address();
         //listener.Prefixes.Add("http://10.2.1.85:5050/"); // labnet lab
         // listener.Prefixes.Add("http://10.2.2.172:5050/"); // labnet office
-        listener.Prefixes.Add($"http://{ip}:5050/"); // labnet office
+        listener.Prefixes.Add($"http://{ip}:6060/"); // labnet office
         //listener.Prefixes.Add("http://10.2.2.167:5050/"); // labnet office
         //listener.Prefixes.Add("http://localhost:5050/"); // labnet office
 

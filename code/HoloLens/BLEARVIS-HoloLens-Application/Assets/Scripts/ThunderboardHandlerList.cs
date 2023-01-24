@@ -131,6 +131,7 @@ public class ThunderboardHandlerList : MonoBehaviour
 
             if (matchingTBH == null)
             {
+                Debug.Log($"matchingTBH is null: {matchingTBH == null} for new id: {idFromSubTopic}");
                 Debug.Log("TBH did not exist, creating one");
                 tbhCounter++;
                 //var newPrefabInstance = Instantiate(thunderboardInfoBoxPrefab, new Vector3(0, 0, 0), Quaternion.identity);
@@ -138,16 +139,35 @@ public class ThunderboardHandlerList : MonoBehaviour
                 newPrefabInstance.transform.localRotation = Quaternion.identity;
                 newPrefabInstance.transform.localScale = new Vector3(1, 1, 1);
                 matchingTBH = newPrefabInstance.GetComponent<ThunderboardHandler>();
-                matchingTBH.ThunderboardInfoBox.SetActive(false);
-                matchingTBH.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset = new Vector3(0,0,1);
+                matchingTBH.ThunderboardInfoBox.SetActive(true);
+                newOffset.z = (newOffset.z < 0.5f) ? 0.5f : newOffset.z;
+                matchingTBH.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset = newOffset;
                 matchingTBH.SerialNumber = tbhCounter;
+                
                 thunderboardHandlerList.Add(matchingTBH);
                 
+            } else
+            {
+                Debug.Log($"(2) matchingTBH is null: {matchingTBH == null} for new id: {idFromSubTopic}");
+            }
+            if (idFromSubTopic == "60A423C98BF1")
+            {
+                Debug.Log("matched with spock");
+                // Spock with soil condition checker
+                matchingTBH.thingIP = "10.2.2.157";
+            }
+            else
+            {
+                Debug.Log("matched with uhura");
+                // Uhura without soil condition checker
+                matchingTBH.thingIP = "10.2.2.240";
             }
             //tbh.TBCurrentLocalOffsetInWorld = newOffset;
             //tbh.thunderboardPositionInWorldCoords = newPosition;
         }
-       
+      
+
+
         matchingTBH.UpdateFromAoAMQTTMessage(newAngle, idFromSubTopic);
     }
 
@@ -165,19 +185,19 @@ public class ThunderboardHandlerList : MonoBehaviour
 
         var sensorType = msgSplit[1];
         var id = msgSplit[2].Split('-')[2];
-        Debug.Log($"received new sensor data for ({id}): {msg}");
+        //Debug.Log($"received new sensor data for ({id}): {msg}");
 
         ThunderboardHandler matchingTBH = ReturnThunderboardHandlerFromListIfExists(id);
 
         if (matchingTBH == null)
         {
-            Debug.Log("no matching tbh found for sensor data");
+            Debug.Log($"no matching tbh found for sensor data with id {id}");
             return;
         } else
         {
             if (float.TryParse(msg, out float value))
             {
-                Debug.Log("parsed float, updating");
+                //Debug.Log("parsed float, updating");
                 matchingTBH.UpdateFromSensorDataMQTTMessage(sensorType, value);
             }
             
@@ -199,11 +219,11 @@ public class ThunderboardHandlerList : MonoBehaviour
         //var bBoxWorldCoordTL = Camera.main.ScreenToWorldPoint(bBoxCoordTL);
         var bBoxCameraSpaceTL = PositionHandler.ScreenToCameraPointThroughRaycast(bBoxCoordTL);
         //var bBoxWorldCoordBR = Camera.main.ScreenToWorldPoint(bBoxCoordBR);
-        var bBoxCamerSpaceBR = PositionHandler.ScreenToCameraPointThroughRaycast(bBoxCoordBR);
+        var bBoxCameraSpaceBR = PositionHandler.ScreenToCameraPointThroughRaycast(bBoxCoordBR);
         log += $"\nbBoxWorldCoordTL: {bBoxCameraSpaceTL}";
-        log += $"\nbBoxWorldCoordBR: {bBoxCamerSpaceBR}";
+        log += $"\nbBoxWorldCoordBR: {bBoxCameraSpaceBR}";
 
-        if (bBoxCameraSpaceTL.sqrMagnitude == 0 && bBoxCamerSpaceBR.sqrMagnitude == 0)
+        if (bBoxCameraSpaceTL.sqrMagnitude == 0 && bBoxCameraSpaceBR.sqrMagnitude == 0)
         {
             log += "\nboth bboxInCameraSpace vectors are (0,0,0). Not continuing.";
             Debug.Log(log);
@@ -211,7 +231,7 @@ public class ThunderboardHandlerList : MonoBehaviour
         }
 
 
-        var matchingTBH = GetClosestTBHForYoloResult(bBoxCameraSpaceTL, bBoxCamerSpaceBR, thingURI);
+        var matchingTBH = GetClosestTBHForYoloResult(bBoxCameraSpaceTL, bBoxCameraSpaceBR, thingURI);
 
         // only create a new InfoBox when there are currently less InfoBoxes than Things in the scene
         var lessTBHsThanThingsInScene = (thunderboardHandlerList.Count < numberOfThingsCurrentlyInScene);
@@ -225,18 +245,24 @@ public class ThunderboardHandlerList : MonoBehaviour
             newPrefabInstance.transform.localRotation = Quaternion.identity;
             newPrefabInstance.transform.localScale = new Vector3(1, 1, 1);
             matchingTBH = newPrefabInstance.GetComponent<ThunderboardHandler>();
-            matchingTBH.ThunderboardInfoBox.SetActive(false);
             matchingTBH.ThunderboardID = "undefined";
-            matchingTBH.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset = new Vector3(0, 0, 1);
+            var newOffset = Vector3.Lerp(bBoxCameraSpaceTL, bBoxCameraSpaceBR, 0.5f);
+            newOffset.z = (newOffset.z < 0.5f) ? 0.5f : newOffset.z;
+            matchingTBH.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset = newOffset;
             matchingTBH.SerialNumber = tbhCounter;
+            matchingTBH.ThunderboardInfoBox.SetActive(true);
             thunderboardHandlerList.Add(matchingTBH);
             log += $"\nadded new tbh: {thunderboardHandlerList[thunderboardHandlerList.Count - 1]}";
             tbhCounter++;
         }
+        log += $"\nmatchingTBH: {matchingTBH}";
+        // log += $"\nmatchingTBH ID: {matchingTBH.ThunderboardID}";
+        //log += $"\nmatchingTBH URI: {matchingTBH.ThingURI}";
+
         if (matchingTBH != null)
         {
             log += "\nmatchinTBH != null";
-            matchingTBH.UpdateParametersFromYoloResult(bBoxCoordTL, bBoxCoordBR, bBoxCameraSpaceTL, bBoxCamerSpaceBR, thingURI);
+            matchingTBH.UpdateParametersFromYoloResult(bBoxCoordTL, bBoxCoordBR, bBoxCameraSpaceTL, bBoxCameraSpaceBR, thingURI);
         } else
         {
             log += $"\nno matching TBH or not lessTBHsThanThingsInScene: {lessTBHsThanThingsInScene}";
@@ -263,7 +289,7 @@ public class ThunderboardHandlerList : MonoBehaviour
     /// <returns></returns>
     public ThunderboardHandler GetClosestTBHForYoloResult(Vector3 bboxCameraSpaceTopLeft, Vector3 bboxCameraSpaceBottomRight, string thingUri)
     {
-        var maxDistanceFromExistingTBsCenter = 2f;
+        var maxDistanceFromExistingTBsCenter = 1f;
         //var maxDistanceFromExistingTBsCenterX = 0.5f;
         ThunderboardHandler matchingTBH = null;
         string log = "--- GetClosestTBHForYoloResult ---";
@@ -272,6 +298,8 @@ public class ThunderboardHandlerList : MonoBehaviour
         foreach (ThunderboardHandler tbh in thunderboardHandlerList)
         {
             log += $"\nid: {tbh.ThunderboardID}";
+            log += $"\nthingUri: {thingUri}";
+            log += $"\ntbh.thingUri: {tbh.ThingURI}";
             Vector3 centerBBoxInCameraSpace = Vector3.Lerp(bboxCameraSpaceTopLeft, bboxCameraSpaceBottomRight, 0.5f);
             log += $"\ncenterBBoxInCameraSpace: {centerBBoxInCameraSpace}";
 
@@ -292,16 +320,12 @@ public class ThunderboardHandlerList : MonoBehaviour
                                        // && distX < maxDistanceFromExistingTBsCenterX
                                         && dist < maxDistanceFromExistingTBsCenter;
 
-            var receivedYoloOrBothSoFar = tbh.ThingURI != null
-                                        && thingUri == tbh.ThingURI
-                                        //&& tbh.ThunderboardID == null
+            var receivedOnlyYoloSoFar =  tbh.ThunderboardID == null
                                         && dist < maxDistanceFromExistingTBsCenter;
 
-            var receivedBothAlready = tbh.ThingURI != null
-                                        && thingUri == tbh.ThingURI
-                                        && tbh.ThunderboardID != null
-                                        //&& distX < maxDistanceFromExistingTBsCenterX
-                                        && dist < maxDistanceFromExistingTBsCenter;     
+            var receivedAoAOrYoloOrBothSoFar = ((tbh.ThingURI != null && thingUri == tbh.ThingURI)
+                                        || tbh.ThunderboardID != null)
+                                        && dist < maxDistanceFromExistingTBsCenter;
             /*
             var onlyReceivedAoASoFar = (string.IsNullOrEmpty(tbh.ThingURI) || tbh.ThingURI == null)
                                         && (!string.IsNullOrEmpty(tbh.ThunderboardID) || tbh.ThunderboardID != null) 
@@ -320,9 +344,11 @@ public class ThunderboardHandlerList : MonoBehaviour
             //*/
             // || boundingBox.Contains(tbh.ThunderboardInfoBoxPositionInWorldCoords
             //if (((!string.IsNullOrEmpty(tbh.ThingURI) && thingUri == tbh.ThingURI) || string.IsNullOrEmpty(tbh.ThingURI)) 
-             //   && dist < maxDistanceFromExistingTBsCenter)
+            //   && dist < maxDistanceFromExistingTBsCenter)
             //if (onlyReceivedAoASoFar || receivedYoloOrBothSoFar || receivedBothAlready)
-            if (onlyReceivedAoASoFar || receivedYoloOrBothSoFar)
+            log += $"\nonlyReceivedAoASoFar: {onlyReceivedAoASoFar}";
+            log += $"\nreceivedAoAOrYoloOrBothSoFar: {receivedAoAOrYoloOrBothSoFar}";
+            if (onlyReceivedAoASoFar || receivedAoAOrYoloOrBothSoFar)
             {
                 log += $"\nfound new closest TBH";
                 matchingTBH = tbh;
@@ -357,9 +383,9 @@ public class ThunderboardHandlerList : MonoBehaviour
     /// </summary>
     /// <param name="newOffsetInCameraSpace"></param>
     /// <returns>A ThunderboardHandler</returns>
-    public ThunderboardHandler GetClosestTBHForNewAoA(Vector3 newOffsetInCameraSpace)
+    public ThunderboardHandler GetClosestTBHForNewAoA(Vector3 newOffsetInCameraSpace, float maxDistanceFromExistingTBsCenterX = 1.5f)
     {
-        var maxDistanceFromExistingTBsCenterX = 0.5f;
+        //var maxDistanceFromExistingTBsCenterX = 1.5f;
         ThunderboardHandler matchingTBH = null;
         string log = "--- GetClosestTBHForNewAoA ---";
 
@@ -380,7 +406,9 @@ public class ThunderboardHandlerList : MonoBehaviour
             // we're only interested in the X-value, since this is the only good info we get from the AoA.
             // Y and Z cannot be derived from the AoA.
             var distX = Mathf.Abs(newOffsetInCameraSpace.x - curTBPositioninCameraSpace.x);
-            log += $"\ndist: {distX}";
+            log += $"\ndistX: {distX}";
+            var distZ = Mathf.Abs(newOffsetInCameraSpace.z - curTBPositioninCameraSpace.z);
+            log += $"\ndistZ: {distZ}";
             //Rect boundingBox = new Rect(tbh.BBoxWorldTopLeft, tbh.BBoxWorldBottomRight);
             // || boundingBox.Contains(newOffset)
 
@@ -397,7 +425,7 @@ public class ThunderboardHandlerList : MonoBehaviour
 
             }
             log += $"\nnew offset: {newOffsetInCameraSpace}";
-            log += $"\nminDistanceFromExistingTBsCenterX: {maxDistanceFromExistingTBsCenterX}";
+            log += $"\nmaxDistanceFromExistingTBsCenterX: {maxDistanceFromExistingTBsCenterX}";
             //log += $"\nnew interpolated pos: {newInterpolatedPositionBBox}";
 
         }
@@ -405,7 +433,7 @@ public class ThunderboardHandlerList : MonoBehaviour
         {
             log += $"\nno tbh in list";
         }
-        log += $"\nminDistanceFromExistingTBsCenterX: {maxDistanceFromExistingTBsCenterX}";
+        log += $"\nmaxDistanceFromExistingTBsCenterX: {maxDistanceFromExistingTBsCenterX}";
         Debug.Log(log);
 
         return matchingTBH;
@@ -414,16 +442,16 @@ public class ThunderboardHandlerList : MonoBehaviour
 
     public ThunderboardHandler ReturnThunderboardHandlerFromListIfExists(string searchedForTBHandlerID)
     {
-        Debug.Log($"searchedForTBHandlerID: {searchedForTBHandlerID}");
+        //Debug.Log($"searchedForTBHandlerID: {searchedForTBHandlerID}");
         ThunderboardHandler returnTBH = null;
         if (thunderboardHandlerList == null) return null;
         foreach (ThunderboardHandler tbh in thunderboardHandlerList)
         {
-            Debug.Log($"this tbh: {tbh.ThunderboardID}");
-            if (tbh.ThunderboardID == null) return null;
+            //Debug.Log($"this tbh: {tbh.ThunderboardID}");
+            if (tbh.ThunderboardID == null) continue;
             if (tbh.ThunderboardID == searchedForTBHandlerID)
             {
-                Debug.Log($"found matching tbh: {tbh.ThunderboardID}");
+                //Debug.Log($"found matching tbh: {tbh.ThunderboardID}");
                 returnTBH = tbh;
             }
         }
