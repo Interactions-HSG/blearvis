@@ -1,54 +1,87 @@
 ﻿using Microsoft.MixedReality.Toolkit.Utilities.Solvers;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
+using TMPro;
 using UnityEngine;
 
 public class ThunderboardHandlerList : MonoBehaviour
 {
-
+    [Header("Global Scripts")]
     public List<ThunderboardHandler> thunderboardHandlerList;
     public PositionHandler PositionHandler;
-    public GameObject thunderboardInfoBoxPrefab;
-    public GameObject thunderboardInfoBoxOrbitalPrefab;
+    public StaticDeviceHandler StaticDeviceHandler;
+
+    [Header("Prefabs")]
+    //public GameObject thunderboardInfoBoxPrefab;
+    public GameObject ThunderboardInfoBoxOrbitalPrefab;
 
     //public GameObject SetYButton;
-
+    [Header("Counter")]
     public int numberOfThingsCurrentlyInScene;
+    public int numberOfTBCurrentlyInScene;
+    public int numberOfYoloCoordinatesReceivedForCurrentDevice;
+    public int numberOfAoAsReceivedForCurrentDevice;
+    public GameObject AoACounterText;
+    public GameObject YoloCounterText;
 
+    public List<(string idORuri, Vector3 offset)> ListOfCurrentNewOffsets;
+    public List<(string idORuri, float aoa)> ListOfCurrentNewAoAs;
+
+    [Header("Values from HTTPListener")]
     public Vector2 TempBBoxCoordTL = new Vector2(0, 0);
     public Vector2 TempBBoxCoordBR = new Vector2(0, 0);
     public string TempThingURI = "";
-
+    public DateTime TmpFrameTime;
     public bool NewYoloResultArrived = false;
 
-    public bool handleIncomingYoloResult =true;
-    public bool handleIncomingAoAResult = true;
+    [Header("If incoming results should be handled")]
+    public bool handleIncomingYoloResult =false;
+    public bool handleIncomingAoAResult = false;
+    public bool handleIncomingAoASensorData = false;
 
+    public bool expectingAoA;
+    public bool expectingYolo;
 
+    /*
     public string pointMode = "world";
     public float GlobalTbhYValue = 0;
     public float GlobalTbhZValue = 1;
+    */
 
     public int tbhCounter = 0;
 
+    public List<(string tbID, DateTime timestamp)> RecentTB;
+
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
-        
-    }
+        numberOfThingsCurrentlyInScene = 0;
+        numberOfTBCurrentlyInScene = 0;
+        RecentTB = new List<(string tbID, DateTime timestamp)>();
+        handleIncomingYoloResult = false;
+        handleIncomingAoAResult = false;
+        handleIncomingAoASensorData = true;
+}
 
     // Update is called once per frame
     void Update()
     {
-        if (NewYoloResultArrived)
+        if (NewYoloResultArrived && handleIncomingYoloResult)
         {
-            if (TempBBoxCoordTL != new Vector2(0, 0) && TempBBoxCoordBR != new Vector2(0, 0) && handleIncomingYoloResult)
+            if (TempBBoxCoordTL != new Vector2(0, 0) && TempBBoxCoordBR != new Vector2(0, 0))
             {
-                HandleIncomingYoloResult(TempBBoxCoordTL, TempBBoxCoordBR, TempThingURI);
+                // HandleIncomingYoloResult(TempBBoxCoordTL, TempBBoxCoordBR, TempThingURI, TmpFrameTime);
+                HandleIncomingYoloResultStaticDevice(TempBBoxCoordTL, TempBBoxCoordBR, TempThingURI, TmpFrameTime);
+
                 TempBBoxCoordTL = new Vector2(0, 0);
                 TempBBoxCoordBR = new Vector2(0, 0);
                 TempThingURI = "";
+            } else
+            {
+                StaticDeviceHandler.NewTBHfromYoloWasSuccessful = false;
             }
+
             NewYoloResultArrived = false;
         }
     }
@@ -100,6 +133,33 @@ public class ThunderboardHandlerList : MonoBehaviour
     }
 
     /// <summary>
+    /// This 
+    /// </summary>
+    /// <param name="id"></param>
+    public void CompareIncomingTBIDWithIDsInScene(string id)
+    {
+        var isInList = false;
+        for (int i = 0; i < RecentTB.Count; i++)
+        {
+            if (RecentTB[i].tbID == id)
+            {
+                RecentTB[i] = (id, DateTime.UtcNow);
+                isInList = true;
+            } else if ((DateTime.UtcNow - RecentTB[i].timestamp).TotalSeconds >= 3) {
+                RecentTB.RemoveAt(i);
+            }
+        }
+
+        if (!isInList)
+        {
+            RecentTB.Add((id, DateTime.UtcNow));
+        }
+
+        numberOfTBCurrentlyInScene = RecentTB.Count;
+
+    }
+
+    /// <summary>
     /// Handles an incoming MQTT message. Extracts the Thunderboard ID from the topic and the angle of arrival (AoA) from the message.
     /// Attaches the AoA to a (new/existing) thunderboardHandler.
     /// </summary>
@@ -118,8 +178,9 @@ public class ThunderboardHandlerList : MonoBehaviour
         var idFromSubTopic = subTopicFromTopic.Split('-')[2];
 
         ThunderboardHandler matchingTBH = ReturnThunderboardHandlerFromListIfExists(idFromSubTopic);
+        CompareIncomingTBIDWithIDsInScene(idFromSubTopic);
 
-        
+
         var newAngle = float.Parse(msg, CultureInfo.InvariantCulture);
         newAngle = (newAngle < -90f) ? -90f : (newAngle > 90f) ? 90f : newAngle;
 
@@ -129,13 +190,13 @@ public class ThunderboardHandlerList : MonoBehaviour
             var newOffset = PositionHandler.CalculateLocalOffsetFromAngle(newAngle);
             matchingTBH = GetClosestTBHForNewAoA(newOffset);
 
-            if (matchingTBH == null)
+            if (matchingTBH == null && thunderboardHandlerList.Count < 2)
             {
                 Debug.Log($"matchingTBH is null: {matchingTBH == null} for new id: {idFromSubTopic}");
                 Debug.Log("TBH did not exist, creating one");
                 tbhCounter++;
                 //var newPrefabInstance = Instantiate(thunderboardInfoBoxPrefab, new Vector3(0, 0, 0), Quaternion.identity);
-                var newPrefabInstance = Instantiate(thunderboardInfoBoxOrbitalPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+                var newPrefabInstance = Instantiate(ThunderboardInfoBoxOrbitalPrefab, new Vector3(0, 0, 0), Quaternion.identity);
                 newPrefabInstance.transform.localRotation = Quaternion.identity;
                 newPrefabInstance.transform.localScale = new Vector3(1, 1, 1);
                 matchingTBH = newPrefabInstance.GetComponent<ThunderboardHandler>();
@@ -172,9 +233,63 @@ public class ThunderboardHandlerList : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Handles an incoming MQTT message. Extracts the Thunderboard ID from the topic and the angle of arrival (AoA) from the message.
+    /// Attaches the AoA to a (new/existing) thunderboardHandler.
+    /// </summary>
+    /// <param name="topic"></param>
+    /// <param name="msg"></param>
+    public void HandleIncomingAoAFromMQTTStaticDevice(string topic, string msg)
+    {
+        string log = "--- HandleIncomingAoAFromMQTTStaticDevice ---";
+        if (!handleIncomingAoAResult)
+        {
+            log += "\nhandling AoA result is paused.";
+            Debug.Log(log);
+            return;
+        }
+
+        
+        // topic looks like this: estimator/angle/ble-pd-60A423C98C93
+        // the ID is just very last part: 60A423C98C93
+        var subTopicFromTopic = topic.Split('/')[2];
+        var idFromSubTopic = subTopicFromTopic.Split('-')[2];
+
+        ThunderboardHandler existingTBH = ReturnThunderboardHandlerFromListIfExists(idFromSubTopic);
+        if (existingTBH != null)
+        {
+            log += "\nincoming AoA belongs to existing TBH. Not continuing.";
+            Debug.Log(log);
+            return;
+        }
+
+        var newAngle = float.Parse(msg, CultureInfo.InvariantCulture);
+        newAngle = (newAngle < -90f) ? -90f : (newAngle > 90f) ? 90f : newAngle;
+
+        ListOfCurrentNewAoAs.Add((idFromSubTopic, newAngle));
+        var newOffset = PositionHandler.CalculateLocalOffsetFromAngle(newAngle);
+
+        numberOfAoAsReceivedForCurrentDevice++;
+        AoACounterText.GetComponent<TextMeshPro>().text = $"AoA: {numberOfAoAsReceivedForCurrentDevice}/5";
+        ListOfCurrentNewOffsets.Add((idFromSubTopic, newOffset));
+
+        log += $"\nnumberOfAoAsReceivedForCurrentDevice: {numberOfAoAsReceivedForCurrentDevice}";
+        log += $"\nnumberOfYoloCoordinatesReceivedForCurrentDevice: {numberOfYoloCoordinatesReceivedForCurrentDevice}";
+
+        if ((numberOfAoAsReceivedForCurrentDevice > 5 && !expectingYolo) 
+            || (numberOfAoAsReceivedForCurrentDevice > 5 && numberOfYoloCoordinatesReceivedForCurrentDevice > 5))
+        {
+            log += "\ncalling StaticDeviceHandler";
+            StaticDeviceHandler.SetTBPositionForStaticDevice();
+            handleIncomingAoAResult = false;
+        }
+        Debug.Log(log);
+
+    }
+
     public void HandleIncomingSensorDataFromMQTT(string topic, string msg)
     {
-        if (!handleIncomingAoAResult)
+        if (!handleIncomingAoASensorData)
         {
             Debug.Log("handling AoA+MQTT result is paused.");
             return;
@@ -211,7 +326,7 @@ public class ThunderboardHandlerList : MonoBehaviour
         /// </summary>
         /// <param name="bBoxCoordTL">top left</param>
         /// <param name="bBoxCoordBR">bottom right</param>
-        public void HandleIncomingYoloResult(Vector2 bBoxCoordTL, Vector2 bBoxCoordBR, string thingURI)
+        public void HandleIncomingYoloResult(Vector2 bBoxCoordTL, Vector2 bBoxCoordBR, string thingURI, DateTime FrameStartTime)
     {
         string log = "--- HandleIncomingYoloResult ---";
 
@@ -234,23 +349,26 @@ public class ThunderboardHandlerList : MonoBehaviour
         var matchingTBH = GetClosestTBHForYoloResult(bBoxCameraSpaceTL, bBoxCameraSpaceBR, thingURI);
 
         // only create a new InfoBox when there are currently less InfoBoxes than Things in the scene
+        var maxNumberOfThingsInScene = Mathf.Max(numberOfTBCurrentlyInScene, numberOfThingsCurrentlyInScene);
         var lessTBHsThanThingsInScene = (thunderboardHandlerList.Count < numberOfThingsCurrentlyInScene);
         log += $"\nthunderboardHandlerList.Count: {thunderboardHandlerList.Count}";
         log += $"\nnumberOfThingsCurrentlyInScene: {numberOfThingsCurrentlyInScene}";
+        log += $"\numberOfTBCurrentlyInScene: {numberOfTBCurrentlyInScene}";
+        log += $"\nmaxNumberOfThingsInScene: {maxNumberOfThingsInScene}";
 
         if (matchingTBH == null && lessTBHsThanThingsInScene)
         {
             log += $"\nno matching TB found or no TB in list. creating one.";
-            var newPrefabInstance = Instantiate(thunderboardInfoBoxOrbitalPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+            var newPrefabInstance = Instantiate(ThunderboardInfoBoxOrbitalPrefab, new Vector3(0, 0, 1), Quaternion.identity);
             newPrefabInstance.transform.localRotation = Quaternion.identity;
             newPrefabInstance.transform.localScale = new Vector3(1, 1, 1);
             matchingTBH = newPrefabInstance.GetComponent<ThunderboardHandler>();
             matchingTBH.ThunderboardID = "undefined";
-            var newOffset = Vector3.Lerp(bBoxCameraSpaceTL, bBoxCameraSpaceBR, 0.5f);
-            newOffset.z = (newOffset.z < 0.5f) ? 0.5f : newOffset.z;
-            matchingTBH.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset = newOffset;
+            // var newOffset = Vector3.Lerp(bBoxCameraSpaceTL, bBoxCameraSpaceBR, 0.5f);
+            // newOffset.z = (newOffset.z < 0.5f) ? 0.5f : newOffset.z;
+            // matchingTBH.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset = newOffset;
             matchingTBH.SerialNumber = tbhCounter;
-            matchingTBH.ThunderboardInfoBox.SetActive(true);
+            // matchingTBH.ThunderboardInfoBox.SetActive(true);
             thunderboardHandlerList.Add(matchingTBH);
             log += $"\nadded new tbh: {thunderboardHandlerList[thunderboardHandlerList.Count - 1]}";
             tbhCounter++;
@@ -262,7 +380,7 @@ public class ThunderboardHandlerList : MonoBehaviour
         if (matchingTBH != null)
         {
             log += "\nmatchinTBH != null";
-            matchingTBH.UpdateParametersFromYoloResult(bBoxCoordTL, bBoxCoordBR, bBoxCameraSpaceTL, bBoxCameraSpaceBR, thingURI);
+            matchingTBH.UpdateParametersFromYoloResult(bBoxCoordTL, bBoxCoordBR, bBoxCameraSpaceTL, bBoxCameraSpaceBR, thingURI, FrameStartTime);
         } else
         {
             log += $"\nno matching TBH or not lessTBHsThanThingsInScene: {lessTBHsThanThingsInScene}";
@@ -274,12 +392,66 @@ public class ThunderboardHandlerList : MonoBehaviour
         Debug.Log(log);
     }
 
+    /// <summary>
+    /// Handles an Incoming Yolo result. The two boundingbox coordinate pairs are attached to a new/existing thunderboardHandler.
+    /// </summary>
+    /// <param name="bboxCameraTL">top left</param>
+    /// <param name="bboxCameraBR">bottom right</param>
+    public void HandleIncomingYoloResultStaticDevice(Vector2 bboxCameraTL, Vector2 bboxCameraBR, string thingURI, DateTime FrameStartTime)
+    {
+        string log = "--- HandleIncomingYoloResultStaticDevice ---";
+
+        /*
+        //var bBoxWorldCoordTL = Camera.main.ScreenToWorldPoint(bBoxCoordTL);
+        var bBoxCameraSpaceTL = PositionHandler.ScreenToCameraPointThroughRaycast(bboxCameraTL);
+        //var bBoxWorldCoordBR = Camera.main.ScreenToWorldPoint(bBoxCoordBR);
+        var bBoxCameraSpaceBR = PositionHandler.ScreenToCameraPointThroughRaycast(bboxCameraBR);
+        log += $"\nbBoxWorldCoordTL: {bBoxCameraSpaceTL}";
+        log += $"\nbBoxWorldCoordBR: {bBoxCameraSpaceBR}";
+
+        if (bBoxCameraSpaceTL.sqrMagnitude == 0 && bBoxCameraSpaceBR.sqrMagnitude == 0)
+        {
+            log += "\nboth bboxInCameraSpace vectors are (0,0,0). Not continuing.";
+            StaticDeviceHandler.NewTBHfromYoloWasSuccessful = false;
+            Debug.Log(log);
+            return;
+        }
+        //*/
+
+        log += $"\nbBoxCoordTL: {bboxCameraTL}";
+        log += $"\nbBoxCoordBR: {bboxCameraBR}";
+
+        var newOffset = PositionHandler.CalculateNewOffsetFromYoloStaticDevice(bboxCameraTL, bboxCameraBR);
+        log += $"\nnewOffset: {newOffset}";
+        
+
+        if (newOffset.x != 0 && newOffset.y != 0 && newOffset.z != 0)
+        {
+            ListOfCurrentNewOffsets.Add((thingURI, newOffset));
+            numberOfYoloCoordinatesReceivedForCurrentDevice++;
+            YoloCounterText.GetComponent<TextMeshPro>().text = $"Yolo: {numberOfYoloCoordinatesReceivedForCurrentDevice}/5";
+        }
+
+
+        log += $"\nnumberOfYoloCoordinatesReceivedForCurrentDevice: {numberOfYoloCoordinatesReceivedForCurrentDevice}";
+        log += $"\nnumberOfAoAsReceivedForCurrentDevice: {numberOfAoAsReceivedForCurrentDevice}";
+
+        if ((numberOfYoloCoordinatesReceivedForCurrentDevice > 5 && !expectingAoA)
+            || (numberOfYoloCoordinatesReceivedForCurrentDevice > 5 && numberOfAoAsReceivedForCurrentDevice > 5))
+        {
+            StaticDeviceHandler.SetTBPositionForStaticDevice();
+            handleIncomingYoloResult = false;
+        }
+
+        log += "\n--- HandleIncomingYoloResult --- done ---";
+        Debug.Log(log);
+    }
 
 
     // ------------------------------------------ Helper Functions -------------------------------------------------------------
     // -------------------------------------------------------------------------------------------------------------------------
 
-   
+
 
     /// <summary>
     /// Based on 2 bounding box coordinates, returns the closest existing TunderboardHandler.
@@ -289,7 +461,7 @@ public class ThunderboardHandlerList : MonoBehaviour
     /// <returns></returns>
     public ThunderboardHandler GetClosestTBHForYoloResult(Vector3 bboxCameraSpaceTopLeft, Vector3 bboxCameraSpaceBottomRight, string thingUri)
     {
-        var maxDistanceFromExistingTBsCenter = 1f;
+        var maxDistanceFromExistingTBsCenter = 0.75f;
         //var maxDistanceFromExistingTBsCenterX = 0.5f;
         ThunderboardHandler matchingTBH = null;
         string log = "--- GetClosestTBHForYoloResult ---";
@@ -383,7 +555,7 @@ public class ThunderboardHandlerList : MonoBehaviour
     /// </summary>
     /// <param name="newOffsetInCameraSpace"></param>
     /// <returns>A ThunderboardHandler</returns>
-    public ThunderboardHandler GetClosestTBHForNewAoA(Vector3 newOffsetInCameraSpace, float maxDistanceFromExistingTBsCenterX = 1.5f)
+    public ThunderboardHandler GetClosestTBHForNewAoA(Vector3 newOffsetInCameraSpace, float maxDistanceFromExistingTBsCenterX = 1f)
     {
         //var maxDistanceFromExistingTBsCenterX = 1.5f;
         ThunderboardHandler matchingTBH = null;
@@ -463,7 +635,7 @@ public class ThunderboardHandlerList : MonoBehaviour
     // + not really needed. 
     // ----------------------------------------------------------------------------------------------------------------------------
 
-
+    /*
     public void SetPointMode(string newMode)
     {
         pointMode = newMode;
@@ -517,4 +689,5 @@ public class ThunderboardHandlerList : MonoBehaviour
             curTransform.position = newPosition;
         }
     }
+    //*/
 }

@@ -36,11 +36,11 @@ class APIHandler:
         else:
             return
         
-    def handleThing(self, thing, display, coord1, coord2, numberOfThingsInScene):
+    def handleThing(self, thing, display, coord1, coord2, numberOfThingsInScene, framestart):
 
         # if self.statusHandler.statuses[thing] != display:
-            
-        url = "{}/?{}={}&coordTLx={}&coordTLy={}&coordBRx={}&coordBRy={}&&numberOfThingsInScene={}".format(self.holo_url, urllib.parse.quote(thing), str(display), str(int(coord1[0])), str(int(coord1[1])), str(int(coord2[0])), str(int(coord2[1])), str(numberOfThingsInScene))
+        framestart = int(framestart)
+        url = "{}/?{}={}&coordTLx={}&coordTLy={}&coordBRx={}&coordBRy={}&&numberOfThingsInScene={}&framestart={}".format(self.holo_url, urllib.parse.quote(thing), str(display), str(int(coord1[0])), str(int(coord1[1])), str(int(coord2[0])), str(int(coord2[1])), str(numberOfThingsInScene), str(framestart))
         # url = f"{self.holo_url}/?{urllib.parse.quote(thing)}={str(display)}&coordTLx={ str(int(coord1[0]))}&coordTLy={str(int(coord1[1]))}&coordBRx={str(int(coord2[0]))}&coordBRy={str(int(coord2[1]))}&numberOfThingsInScene={numberOfThingsInScene}"
         
         # url = f"{self.holo_url}"

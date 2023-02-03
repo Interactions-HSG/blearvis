@@ -123,7 +123,8 @@ namespace M2MqttUnity.Examples
 
             if (topic.StartsWith("estimator/angle"))
             {
-                thunderboardHandlerListScript.HandleIncomingAoAFromMQTT(topic, msg);
+                // thunderboardHandlerListScript.HandleIncomingAoAFromMQTT(topic, msg);
+                thunderboardHandlerListScript.HandleIncomingAoAFromMQTTStaticDevice(topic, msg);
 
             } else if (topic.StartsWith("sensor"))
             {

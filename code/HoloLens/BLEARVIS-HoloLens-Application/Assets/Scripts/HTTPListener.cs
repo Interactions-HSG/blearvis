@@ -13,6 +13,7 @@ public class HTTPListener : MonoBehaviour
     //public ThunderboardHandler thunderboardHandler;
     public ThunderboardHandlerList ThunderboardHandlerList;
     public PositionHandler PositionHandler;
+    public StaticDeviceHandler StaticDeviceHandler;
 
 
 
@@ -100,13 +101,14 @@ public class HTTPListener : MonoBehaviour
             // https://blarvis.interactions.ics.unisg.ch/card
             // https://blarvis.interactions.ics.unisg.ch/lamp
             // https://blarvis.interactions.ics.unisg.ch/mac
-            if (firstKey.StartsWith("https://blarvis") && firstValue == "1")
+            if (firstKey.StartsWith("https://blarvis") && firstValue == "1" && ThunderboardHandlerList.handleIncomingYoloResult)
             {
                 var bBoxCoordTLx = int.Parse(context.Request.QueryString["coordTLx"]);  // top left x-value
                 var bBoxCoordTLy = int.Parse(context.Request.QueryString["coordTLy"]);
                 var bBoxCoordBRx = int.Parse(context.Request.QueryString["coordBRx"]);  // bottom right x-value
                 var bBoxCoordBRy = int.Parse(context.Request.QueryString["coordBRy"]);
                 var numThings = int.Parse(context.Request.QueryString["numberOfThingsInScene"]);
+                var frameStartTime = context.Request.QueryString["framestart"];
 
                 Vector2 bBoxCoordTL = new Vector2(bBoxCoordTLx, bBoxCoordTLy);
                 Vector2 bBoxCoordBR = new Vector2(bBoxCoordBRx, bBoxCoordBRy);
@@ -118,6 +120,9 @@ public class HTTPListener : MonoBehaviour
                 ThunderboardHandlerList.TempThingURI = firstKey;
                 ThunderboardHandlerList.NewYoloResultArrived = true;
                 ThunderboardHandlerList.numberOfThingsCurrentlyInScene = numThings;
+
+                DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(long.Parse(frameStartTime));
+                ThunderboardHandlerList.TmpFrameTime = dateTimeOffset.DateTime;
                 Debug.Log($"numberOfThingsCurrentlyInScene: {numThings}");
             }
             else if (firstKey.StartsWith("frame"))

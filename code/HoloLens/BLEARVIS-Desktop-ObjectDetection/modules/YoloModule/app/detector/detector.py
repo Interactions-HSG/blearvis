@@ -53,6 +53,7 @@ class Detector:
                 self.weights = 'detector/checkpoints/custom-tiny-416'
             else:
                 self.weights = 'detector/checkpoints/custom-416'   # was custom-416
+                # self.weights = 'detector/checkpoints/blearvis-416'   # ADDED
                 # self.weights = 'detector/checkpoints/custom-608'
                 # print("path with 608")
 
@@ -68,7 +69,7 @@ class Detector:
         print("TensorFlow Yolo::__init__()")
         print("TensorFlow Model : %s" % (self.model))
         print("===============================================================")
-        print("Initialising te TensorFlow model with the following parameters: ")
+        print("Initialising the TensorFlow model with the following parameters: ")
         print("   - Tiny            : " + str(self.tiny))
         print("   - Weights         : " + self.weights)
         print("")
