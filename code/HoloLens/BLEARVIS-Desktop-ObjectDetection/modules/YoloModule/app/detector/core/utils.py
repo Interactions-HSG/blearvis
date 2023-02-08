@@ -33,7 +33,7 @@ def load_weights(model, weights_file, model_name='yolov4', is_tiny=False):
             output_pos = [58, 66, 74]
         else:
             # layer_size = 110
-            layer_size = 102      # USE THIS for custom weights!!!!!!!!!!!!!!!!!!!!! 108 for 5 classes, 106 for 4
+            layer_size = 108      # USE THIS for custom weights!!!!!!!!!!!!!!!!!!!!! 108 for 5 classes, 106 for 4
             output_pos = [93, 101, 109]
     wf = open(weights_file, 'rb')
     major, minor, revision, seen, _ = np.fromfile(wf, dtype=np.int32, count=5)
@@ -381,7 +381,9 @@ def draw_bbox(image, bboxes, classes=read_class_names(cfg.YOLO.CLASSES), allowed
             detections.append((classes[class_ind], score))
 
             if show_label:
-                bbox_mess = "%s: %.2f\n(%.2f,%.2f)(%.2f,%.2f)" % (classes[class_ind], score, c1[0], c1[1], c2[0], c2[1])
+                name = classes[class_ind].split('/')[-1]
+                # bbox_mess = "%s: %.2f\n(%.2f,%.2f)(%.2f,%.2f)" % (name, score, c1[0], c1[1], c2[0], c2[1])
+                bbox_mess = "%s: %.2f" % (name, score)
                 t_size = cv2.getTextSize(bbox_mess, 0, fontScale, thickness=bbox_thick // 3)[0]
                 c3 = (c1[0] + t_size[0], c1[1] - t_size[1] - 3)
                 # cv2.rectangle(image, c1, (np.float32(c3[0]), np.float32(c3[1])), bbox_color, -1) #filled

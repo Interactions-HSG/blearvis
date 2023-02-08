@@ -24,6 +24,7 @@ public class ThunderboardHandlerList : MonoBehaviour
     public int numberOfAoAsReceivedForCurrentDevice;
     public GameObject AoACounterText;
     public GameObject YoloCounterText;
+    public string MACofFirstBLETag;
 
     public List<(string idORuri, Vector3 offset)> ListOfCurrentNewOffsets;
     public List<(string idORuri, float aoa)> ListOfCurrentNewAoAs;
@@ -425,7 +426,9 @@ public class ThunderboardHandlerList : MonoBehaviour
         log += $"\nnewOffset: {newOffset}";
         
 
-        if (newOffset.x != 0 && newOffset.y != 0 && newOffset.z != 0)
+        if ((newOffset.x >= 0.01 || newOffset.x <= -0.01) 
+            && (newOffset.y >= 0.01 || newOffset.y <= -0.01)
+            && (newOffset.z >= 0.5))
         {
             ListOfCurrentNewOffsets.Add((thingURI, newOffset));
             numberOfYoloCoordinatesReceivedForCurrentDevice++;

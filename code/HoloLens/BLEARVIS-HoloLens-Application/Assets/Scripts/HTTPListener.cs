@@ -26,7 +26,7 @@ public class HTTPListener : MonoBehaviour
         var ip = GetIP4Address();
         //listener.Prefixes.Add("http://10.2.1.85:5050/"); // labnet lab
         // listener.Prefixes.Add("http://10.2.2.172:5050/"); // labnet office
-        listener.Prefixes.Add($"http://{ip}:6060/"); // labnet office
+        listener.Prefixes.Add($"http://{ip}:6070/"); // labnet office
         //listener.Prefixes.Add("http://10.2.2.167:5050/"); // labnet office
         //listener.Prefixes.Add("http://localhost:5050/"); // labnet office
 
@@ -35,7 +35,7 @@ public class HTTPListener : MonoBehaviour
 
         listenerThread = new Thread(StartListener);
         listenerThread.Start();
-        Debug.Log($"Server Started listening at http://{ip}:5050/");
+        Debug.Log($"Server Started listening at http://{ip}:6070/");
 
         // there is only one thunderboardHandlerListScript in the scene
         if (ThunderboardHandlerList == null)
@@ -96,12 +96,13 @@ public class HTTPListener : MonoBehaviour
                 Debug.Log($"is coordinate");
             }
             */
-            //if (key.StartsWith("https://blarvis"))
+            //if (key.StartsWith("https://interactions"))
             //{
             // https://blarvis.interactions.ics.unisg.ch/card
             // https://blarvis.interactions.ics.unisg.ch/lamp
             // https://blarvis.interactions.ics.unisg.ch/mac
-            if (firstKey.StartsWith("https://blarvis") && firstValue == "1" && ThunderboardHandlerList.handleIncomingYoloResult)
+            // if (firstKey.StartsWith("https://interactions") && firstValue == "1" && ThunderboardHandlerList.handleIncomingYoloResult)
+            if (firstKey.StartsWith("https://interactions") && firstValue == "1" && ThunderboardHandlerList.handleIncomingYoloResult)
             {
                 var bBoxCoordTLx = int.Parse(context.Request.QueryString["coordTLx"]);  // top left x-value
                 var bBoxCoordTLy = int.Parse(context.Request.QueryString["coordTLy"]);

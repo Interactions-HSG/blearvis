@@ -15,7 +15,8 @@ __C.YOLO                      = edict()
 #__C.YOLO.CLASSES              = "detector/data/classes/coco.names"
 
 # PATH TO CUSTOM CLASS NAMES
-__C.YOLO.CLASSES              = "detector/data/classes/custom.names"
+# __C.YOLO.CLASSES              = "detector/data/classes/custom.names"
+__C.YOLO.CLASSES              = "detector/data/classes/blearvis.names"
 
 __C.YOLO.ANCHORS              = [12,16, 19,36, 40,28, 36,75, 76,55, 72,146, 142,110, 192,243, 459,401]
 __C.YOLO.ANCHORS_V3           = [10,13, 16,30, 33,23, 30,61, 62,45, 59,119, 116,90, 156,198, 373,326]
@@ -35,6 +36,7 @@ __C.TRAIN.ANNOT_PATH          = "./data/dataset/val2017.txt"
 __C.TRAIN.BATCH_SIZE          = 2
 # __C.TRAIN.INPUT_SIZE            = [320, 352, 384, 416, 448, 480, 512, 544, 576, 608]
 __C.TRAIN.INPUT_SIZE          = 416
+# __C.TRAIN.INPUT_SIZE          = 608
 __C.TRAIN.DATA_AUG            = True
 __C.TRAIN.LR_INIT             = 1e-3
 __C.TRAIN.LR_END              = 1e-6
@@ -50,6 +52,7 @@ __C.TEST                      = edict()
 __C.TEST.ANNOT_PATH           = "./data/dataset/val2017.txt"
 __C.TEST.BATCH_SIZE           = 2
 __C.TEST.INPUT_SIZE           = 416
+# __C.TEST.INPUT_SIZE           = 608
 __C.TEST.DATA_AUG             = False
 __C.TEST.DECTECTED_IMAGE_PATH = "./data/detection/"
 __C.TEST.SCORE_THRESHOLD      = 0.25

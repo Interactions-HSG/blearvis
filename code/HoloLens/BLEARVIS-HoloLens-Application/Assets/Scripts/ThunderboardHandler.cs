@@ -76,6 +76,7 @@ public class ThunderboardHandler : MonoBehaviour
     public static bool SetNewPositionFromYolo;
     public bool GetDataFromThing;
     public bool GetDataFromThingCourutineRunning;
+   
     //public float newAngle;
   
 
@@ -134,10 +135,40 @@ public class ThunderboardHandler : MonoBehaviour
             RemoveInfoBox(ThunderboardInfoBox);
         }
         //*/
-        if (!GetDataFromThingCourutineRunning)
+        if (GetDataFromThingCourutineRunning && GetDataFromThing)
         {
-            GetDataFromThing = true;
-            StartCoroutine(StartGettingDataFromThing());
+            GetDataFromThing = false;
+            // StartCoroutine(StartGettingDataFromThing());
+
+            if (ThunderboardID == "60A423C98BF1")
+            {
+                
+                System.Random rnd = new System.Random();
+
+                
+                var comma = rnd.Next(0, 9);
+                BatteryVoltage = float.Parse($"{rnd.Next(5, 10)}.{comma}");
+                SetBatteryVoltageText();
+                BatteryText.SetActive(true);
+
+                SoilCondition.ph = rnd.Next(0,255);
+                SoilCondition.nitrate = rnd.Next(0,255);
+                SoilCondition.moisture = rnd.Next(0,255);
+                SoilCondition.density = rnd.Next(0,255);
+                SetSoilconditionText();
+                Soil.SetActive(true);
+                TractorInfo.SetActive(true);
+                GetDataFromThingCourutineRunning = false;
+            } else if (ThingURI == "tractorbot"){
+
+                    System.Random rnd = new System.Random();
+
+                    var comma = rnd.Next(0, 9);
+                    BatteryVoltage = float.Parse($"{rnd.Next(5, 10)}.{comma}");
+                    SetBatteryVoltageText();
+                    BatteryText.SetActive(true);
+                    TractorInfo.SetActive(true);
+            }
         }
 
 
@@ -227,14 +258,18 @@ public class ThunderboardHandler : MonoBehaviour
     {
         //LastTemperatureSensorUpdate = (LastTemperatureSensorUpdate == default(DateTime)) ? DateTime.UtcNow : LastTemperatureSensorUpdate;
         //LastHumiditySensorUpdate = (LastHumiditySensorUpdate == default(DateTime)) ? DateTime.UtcNow : LastHumiditySensorUpdate;
+        Debug.Log($"ThunderboardHandlerList.MACofFirstBLETag: {ThunderboardHandlerList.MACofFirstBLETag}");
+        Debug.Log($"ThunderboardID: {ThunderboardID}");
 
-        if (sensorType == "temp")
+        if (sensorType == "temp" && ThunderboardHandlerList.MACofFirstBLETag == this.ThunderboardID)
         {
+            /*
             if ((DateTime.UtcNow - LastTemperatureSensorUpdate).TotalSeconds < 0.25)
             {
                 //Debug.Log($"Last sensor update was less than 0.5s ago. Not updating.");
                 return;
             }
+            */
             // only update if the value has changed.
             if (SensorData.temperature == value) { return; }
             SensorData.temperature = value;
@@ -242,13 +277,15 @@ public class ThunderboardHandler : MonoBehaviour
             LastTemperatureSensorUpdate = DateTime.UtcNow;
             SetSensorTemperatureText();
         } 
-        else if (sensorType == "hum")
+        else if (sensorType == "hum" && ThunderboardHandlerList.MACofFirstBLETag != this.ThunderboardID)
         {
+            /*
             if ((DateTime.UtcNow - LastHumiditySensorUpdate).TotalSeconds < 0.25)
             {
                 //Debug.Log($"Last sensor update was less than 0.5s ago. Not updating.");
                 return;
             }
+        //*/
             if (SensorData.humidity == value) { return; }
             SensorData.humidity = value;
             LastHumiditySensorUpdate = DateTime.UtcNow;
@@ -637,8 +674,10 @@ public class ThunderboardHandler : MonoBehaviour
     /// </summary>
     public void SetThingURIText()
     {
+        //*
         var splitted = ThingURI.Split('/');
         var name = splitted[splitted.Length - 1];
+        /*
         if (name == "spock")
         {
             name = "Tractor";
@@ -646,8 +685,10 @@ public class ThunderboardHandler : MonoBehaviour
         {
             name = "xArm 7";
         }
-        var thingURIT = $"{name}";
-        ThingURIText.GetComponent<TextMeshPro>().text = thingURIT;
+        //*/ 
+        // var thingURIT = $"{name}";
+        //var name = ThingURI;
+        ThingURIText.GetComponent<TextMeshPro>().text = $"{name}";
     }
 
 
@@ -666,7 +707,7 @@ public class ThunderboardHandler : MonoBehaviour
     /// </summary>
     public void SetSerialNumberText()
     {
-        var snT = $"No.: {SerialNumber} ";
+        var snT = $"({SerialNumber})";
         SerialNumberText.GetComponent<TextMeshPro>().text = snT;
     }
 
@@ -704,6 +745,7 @@ public class ThunderboardHandler : MonoBehaviour
     /// </summary>
     public void SetSensorTemperatureText()
     {
+        SensorTextTemperature.SetActive(true);
         var text = $"Temperature:<space=2.8em> {SensorData.temperature} °C";
         SensorTextTemperature.GetComponent<TextMeshPro>().text = text;
     }   
@@ -713,6 +755,7 @@ public class ThunderboardHandler : MonoBehaviour
     /// </summary>
     public void SetSensorHumidityText()
     {
+        SensorTextHumidity.SetActive(true);
         var text = $"Humidity:<space=4.3em> {SensorData.humidity} %";
         SensorTextHumidity.GetComponent<TextMeshPro>().text = text;
     }

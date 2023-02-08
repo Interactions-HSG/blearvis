@@ -428,7 +428,7 @@ public class PositionHandler : MonoBehaviour
             log += "\n--- ScreenToWorldPointRaycast --- end ---";
             if (label != "")
             {
-                CreateBBoxCorner(newInCamLocalSpace, label);
+                //CreateBBoxCorner(newInCamLocalSpace, label);
                 //CreateBBoxCornerWorld(hit.point, label);
             }
             

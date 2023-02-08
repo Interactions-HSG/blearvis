@@ -52,9 +52,11 @@ class Detector:
             if self.tiny:
                 self.weights = 'detector/checkpoints/custom-tiny-416'
             else:
-                self.weights = 'detector/checkpoints/custom-416'   # was custom-416
-                # self.weights = 'detector/checkpoints/blearvis-416'   # ADDED
+                # self.weights = 'detector/checkpoints/custom-416'
+                self.weights = 'detector/checkpoints/blearvis-best-416'   # was custom-416
+                # self.weights = 'detector/checkpoints/blearvis-608'   # ADDED
                 # self.weights = 'detector/checkpoints/custom-608'
+                
                 # print("path with 608")
 
         if self.framework == 'tflite':

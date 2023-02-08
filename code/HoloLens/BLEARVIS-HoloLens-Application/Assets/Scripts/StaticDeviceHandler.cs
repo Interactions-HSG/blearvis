@@ -23,6 +23,8 @@ public class StaticDeviceHandler : MonoBehaviour
     public GameObject CheckboxYolo;
     public GameObject CheckboxAoA;
     public GameObject ThunderboardInfoBoxOrbitalPrefab;
+    public GameObject Menu;
+
 
 
     public bool NewTBHfromYoloWasSuccessful;
@@ -69,6 +71,8 @@ public class StaticDeviceHandler : MonoBehaviour
         RedoAddDeviceText.SetActive(true);
         ButtonRedoAddDevice.SetActive(true);
         ButtonConfirm.SetActive(true);
+        ButtonAddNewDevice.SetActive(false);
+        Menu.SetActive(true);
     }
 
 
@@ -76,8 +80,9 @@ public class StaticDeviceHandler : MonoBehaviour
     public void AddNewDevice(bool isReDo = false)
     {
 
-        if (isReDo)
+        if (isReDo && ThunderboardHandlerList.thunderboardHandlerList.Count > 0)
         {
+            
             var lastTBH = ThunderboardHandlerList.thunderboardHandlerList.Last();
             var infoPanel = lastTBH.ThunderboardInfoBox;
             infoPanel.SetActive(false);
@@ -137,7 +142,8 @@ public class StaticDeviceHandler : MonoBehaviour
         // var newOffset = Vector3.Lerp(bBoxCameraSpaceTL, bBoxCameraSpaceBR, 0.5f);
         // newOffset.z = (newOffset.z < 0.5f) ? 0.5f : newOffset.z;
         // matchingTBH.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset = newOffset;
-        tbh.SerialNumber = ThunderboardHandlerList.tbhCounter;
+        tbh.SerialNumber = ThunderboardHandlerList.thunderboardHandlerList.Count+1;
+        tbh.SetSerialNumberText();
         tbh.ThunderboardInfoBox.SetActive(false);
         ThunderboardHandlerList.thunderboardHandlerList.Add(tbh);
         log += $"\nadded new tbh: {ThunderboardHandlerList.thunderboardHandlerList[ThunderboardHandlerList.thunderboardHandlerList.Count - 1]}";
@@ -192,12 +198,18 @@ public class StaticDeviceHandler : MonoBehaviour
 
         if (id != "")
         {
+            if (ThunderboardHandlerList.thunderboardHandlerList.Count == 1)
+            {
+                ThunderboardHandlerList.MACofFirstBLETag = id;
+                log += $"\nThunderboardHandlerList.MACofFirstBLETag: {ThunderboardHandlerList.MACofFirstBLETag}";
+            }
             if (id == "60A423C98BF1")
             {
                 tbh.thingIP = "10.2.2.240";
             }
 
             tbh.GetDataFromThing = true;
+            tbh.GetDataFromThingCourutineRunning = true;
             
         }
 
@@ -238,6 +250,8 @@ public class StaticDeviceHandler : MonoBehaviour
             newOffset = new Vector3(Mathf.Lerp(avgYoloOffset.x, avgAoAOffset.x, 0.3f), avgYoloOffset.y, Mathf.Lerp(avgYoloOffset.z, avgAoAOffset.z, 0.3f));
         } else if (yoloOffsetListContainsElements && !aoaOffsetListContainsElements)
         {
+            newOffset = avgYoloOffset;
+            /*
             if (Vector3.Distance(lastYoloOffset, avgYoloOffset) > 0.5)
             {
                 newOffset = lastYoloOffset;
@@ -245,7 +259,8 @@ public class StaticDeviceHandler : MonoBehaviour
             {
                 newOffset = avgYoloOffset;
             }
-            
+            //*/
+
             // 
         }
         else if (!yoloOffsetListContainsElements  && aoaOffsetListContainsElements)
