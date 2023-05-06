@@ -75,7 +75,7 @@ public class PositionHandler : MonoBehaviour
     private void CheckCameraVelocity()
     {
 
-        Quaternion deltaRotation = _mainCamera.transform.rotation * Quaternion.Inverse(_lastCameraRotation);
+    Quaternion deltaRotation = _mainCamera.transform.rotation * Quaternion.Inverse(_lastCameraRotation);
         string log = "--- CheckCamerasAngularVelocity ---";
         log += $"\nlastCameraRotation: {_lastCameraRotation}";
         log += $"\ncurCameraRotation: {_mainCamera.transform.rotation}";

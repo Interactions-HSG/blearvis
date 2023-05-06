@@ -20,14 +20,19 @@ public class ThunderboardHandlerList : MonoBehaviour
     [Header("Counter")]
     public int numberOfThingsCurrentlyInScene;
     public int numberOfTBCurrentlyInScene;
-    public int numberOfYoloCoordinatesReceivedForCurrentDevice;
-    public int numberOfAoAsReceivedForCurrentDevice;
+    public int numberOfYoloCoordinatesReceivedForCurrentDevices;
+    public int numberOfAoAsReceivedForCurrentDevices;
     public GameObject AoACounterText;
     public GameObject YoloCounterText;
     public string MACofFirstBLETag;
 
-    public List<(string idORuri, Vector3 offset)> ListOfCurrentNewOffsets;
-    public List<(string idORuri, float aoa)> ListOfCurrentNewAoAs;
+    // public List<(string idORuri, Vector3 offset)> ListOfCurrentNewOffsets;
+    // public List<(string idORuri, float aoa)> ListOfCurrentNewAoAs;
+
+    public Dictionary<string, List<Vector3>> ListOfCurrentNewOffsets;
+    public  Dictionary<string, List<Vector3>> DictOfAoaOffsetLists;
+    public Dictionary<string, List<Vector3>> DictOfYoloOffsetLists;
+    public Dictionary<string, List<float>> ListOfCurrentNewAoAs;
 
     [Header("Values from HTTPListener")]
     public Vector2 TempBBoxCoordTL = new Vector2(0, 0);
@@ -43,6 +48,7 @@ public class ThunderboardHandlerList : MonoBehaviour
 
     public bool expectingAoA;
     public bool expectingYolo;
+    public bool expectingMultipleThings;
 
     /*
     public string pointMode = "world";
@@ -60,7 +66,7 @@ public class ThunderboardHandlerList : MonoBehaviour
         numberOfThingsCurrentlyInScene = 0;
         numberOfTBCurrentlyInScene = 0;
         RecentTB = new List<(string tbID, DateTime timestamp)>();
-        handleIncomingYoloResult = false;
+        handleIncomingYoloResult = true;
         handleIncomingAoAResult = false;
         handleIncomingAoASensorData = true;
 }
@@ -267,21 +273,38 @@ public class ThunderboardHandlerList : MonoBehaviour
         var newAngle = float.Parse(msg, CultureInfo.InvariantCulture);
         newAngle = (newAngle < -90f) ? -90f : (newAngle > 90f) ? 90f : newAngle;
 
-        ListOfCurrentNewAoAs.Add((idFromSubTopic, newAngle));
+        if (ListOfCurrentNewAoAs.ContainsKey(idFromSubTopic))
+        {
+            ListOfCurrentNewAoAs[idFromSubTopic].Add(newAngle);
+        } else
+        {
+            ListOfCurrentNewAoAs.Add(idFromSubTopic, new List<float> { newAngle });
+        }
+
+        
         var newOffset = PositionHandler.CalculateLocalOffsetFromAngle(newAngle);
 
-        numberOfAoAsReceivedForCurrentDevice++;
-        AoACounterText.GetComponent<TextMeshPro>().text = $"AoA: {numberOfAoAsReceivedForCurrentDevice}/5";
-        ListOfCurrentNewOffsets.Add((idFromSubTopic, newOffset));
+        numberOfAoAsReceivedForCurrentDevices++;
+        AoACounterText.GetComponent<TextMeshPro>().text = $"AoA: {numberOfAoAsReceivedForCurrentDevices}/5";
+        // ListOfCurrentNewOffsets.Add((idFromSubTopic, newOffset));
 
-        log += $"\nnumberOfAoAsReceivedForCurrentDevice: {numberOfAoAsReceivedForCurrentDevice}";
-        log += $"\nnumberOfYoloCoordinatesReceivedForCurrentDevice: {numberOfYoloCoordinatesReceivedForCurrentDevice}";
+        if (DictOfAoaOffsetLists.ContainsKey(idFromSubTopic))
+        {
+            DictOfAoaOffsetLists[idFromSubTopic].Add(newOffset);
+        }
+        else
+        {
+            DictOfAoaOffsetLists.Add(idFromSubTopic, new List<Vector3> { newOffset });
+        }
 
-        if ((numberOfAoAsReceivedForCurrentDevice > 5 && !expectingYolo) 
-            || (numberOfAoAsReceivedForCurrentDevice > 5 && numberOfYoloCoordinatesReceivedForCurrentDevice > 5))
+        log += $"\nnumberOfAoAsReceivedForCurrentDevices: {numberOfAoAsReceivedForCurrentDevices}";
+        log += $"\nnumberOfYoloCoordinatesReceivedForCurrentDevices: {numberOfYoloCoordinatesReceivedForCurrentDevices}";
+
+        if ((numberOfAoAsReceivedForCurrentDevices > 15 && !expectingYolo) 
+            || (numberOfAoAsReceivedForCurrentDevices > 15 && numberOfYoloCoordinatesReceivedForCurrentDevices > 15))
         {
             log += "\ncalling StaticDeviceHandler";
-            StaticDeviceHandler.SetTBPositionForStaticDevice();
+            StaticDeviceHandler.SetTBPositionForStaticDevices();
             handleIncomingAoAResult = false;
         }
         Debug.Log(log);
@@ -426,23 +449,32 @@ public class ThunderboardHandlerList : MonoBehaviour
         log += $"\nnewOffset: {newOffset}";
         
 
-        if ((newOffset.x >= 0.01 || newOffset.x <= -0.01) 
-            && (newOffset.y >= 0.01 || newOffset.y <= -0.01)
-            && (newOffset.z >= 0.5))
+        //if ((newOffset.x >= 0.01 || newOffset.x <= -0.01) 
+        //    && (newOffset.y >= 0.01 || newOffset.y <= -0.01)
+          //  && (newOffset.z >= 0.5))
+        if (newOffset.z > 0)
         {
-            ListOfCurrentNewOffsets.Add((thingURI, newOffset));
-            numberOfYoloCoordinatesReceivedForCurrentDevice++;
-            YoloCounterText.GetComponent<TextMeshPro>().text = $"Yolo: {numberOfYoloCoordinatesReceivedForCurrentDevice}/5";
+            if (DictOfYoloOffsetLists.ContainsKey(thingURI))
+            {
+                DictOfYoloOffsetLists[thingURI].Add(newOffset);
+            }
+            else
+            {
+                DictOfYoloOffsetLists.Add(thingURI, new List<Vector3> { newOffset });
+            }
+            // ListOfCurrentNewOffsets.Add((thingURI, newOffset));
+            numberOfYoloCoordinatesReceivedForCurrentDevices++;
+            YoloCounterText.GetComponent<TextMeshPro>().text = $"Yolo: {numberOfYoloCoordinatesReceivedForCurrentDevices}/20";
         }
 
 
-        log += $"\nnumberOfYoloCoordinatesReceivedForCurrentDevice: {numberOfYoloCoordinatesReceivedForCurrentDevice}";
-        log += $"\nnumberOfAoAsReceivedForCurrentDevice: {numberOfAoAsReceivedForCurrentDevice}";
+        log += $"\nnumberOfYoloCoordinatesReceivedForCurrentDevice: {numberOfYoloCoordinatesReceivedForCurrentDevices}";
+        log += $"\nnumberOfAoAsReceivedForCurrentDevice: {numberOfAoAsReceivedForCurrentDevices}";
 
-        if ((numberOfYoloCoordinatesReceivedForCurrentDevice > 5 && !expectingAoA)
-            || (numberOfYoloCoordinatesReceivedForCurrentDevice > 5 && numberOfAoAsReceivedForCurrentDevice > 5))
+        if ((numberOfYoloCoordinatesReceivedForCurrentDevices > 20 && !expectingAoA)
+            || (numberOfYoloCoordinatesReceivedForCurrentDevices > 20 && numberOfAoAsReceivedForCurrentDevices > 10))
         {
-            StaticDeviceHandler.SetTBPositionForStaticDevice();
+            StaticDeviceHandler.SetTBPositionForStaticDevices();
             handleIncomingYoloResult = false;
         }
 
