@@ -1,7 +1,10 @@
 import tensorflow as tf
+import os
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
 if len(physical_devices) > 0:
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
+    # tf.config.experimental.set_memory_growth(physical_devices[1], True)     ### changed by Jannis
+    # os.environ["CUDA_VISIBLE_DEVICES"]="GPU"
 from absl import app, flags, logging
 from absl.flags import FLAGS
 import core.utils as utils

@@ -33,7 +33,7 @@ def load_weights(model, weights_file, model_name='yolov4', is_tiny=False):
             output_pos = [58, 66, 74]
         else:
             # layer_size = 110
-            layer_size = 108      # USE THIS for custom weights!!!!!!!!!!!!!!!!!!!!! 108 for 5 classes, 106 for 4
+            layer_size = 107      # USE THIS for custom weights!!!!!!!!!!!!!!!!!!!!! 108 for 5 classes, 106 for 4
             output_pos = [93, 101, 109]
     wf = open(weights_file, 'rb')
     major, minor, revision, seen, _ = np.fromfile(wf, dtype=np.int32, count=5)
@@ -378,7 +378,9 @@ def draw_bbox(image, bboxes, classes=read_class_names(cfg.YOLO.CLASSES), allowed
             c1, c2 = (int(coor[1]), int(coor[0])), (int(coor[3]), int(coor[2]))
             cv2.rectangle(image, c1, c2, bbox_color, bbox_thick)
 
-            detections.append((classes[class_ind], score))
+            # EDIT_JANNIS_Coordinates  
+            # detections.append((classes[class_ind], score))
+            detections.append((classes[class_ind], score, c1,c2))
 
             if show_label:
                 name = classes[class_ind].split('/')[-1]
@@ -393,4 +395,38 @@ def draw_bbox(image, bboxes, classes=read_class_names(cfg.YOLO.CLASSES), allowed
                 #            fontScale, (0, 0, 0), bbox_thick // 2, lineType=cv2.LINE_AA)
                 cv2.putText(image, bbox_mess, (c1[0], int(c1[1] - 2)), cv2.FONT_HERSHEY_SIMPLEX,
                             fontScale, (0, 0, 0), bbox_thick // 2, lineType=cv2.LINE_AA)
-    return detections, image, c1, c2
+    # EDIT_JANNIS_Coordinates            
+    #return detections, image, c1, c2
+    return detections, image
+
+def letterbox(im, new_shape=(416,416), color=(114, 114, 114), auto=True, scaleup=True, stride=32):
+                # Resize and pad image while meeting stride-multiple constraints
+                # print("im type: ", type(im)) 
+                im = np.asarray(im)
+                # print("im type: ", type(im)) 
+                shape = im.shape[:2]  # current shape [height, width]
+                if isinstance(new_shape, int):
+                    new_shape = (new_shape, new_shape)
+
+                # Scale ratio (new / old)
+                r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
+                if not scaleup:  # only scale down, do not scale up (for better val mAP)
+                    r = min(r, 1.0)
+
+                # Compute padding
+                new_unpad = int(round(shape[1] * r)), int(round(shape[0] * r))
+                dw, dh = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]  # wh padding
+
+                if auto:  # minimum rectangle
+                    dw, dh = np.mod(dw, stride), np.mod(dh, stride)  # wh padding
+
+                dw /= 2  # divide padding into 2 sides
+                dh /= 2
+
+                if shape[::-1] != new_unpad:  # resize
+                    im = cv2.resize(im, new_unpad, interpolation=cv2.INTER_LINEAR)
+                top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
+                left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
+                im = cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
+                return im, r, (dw, dh)
+    

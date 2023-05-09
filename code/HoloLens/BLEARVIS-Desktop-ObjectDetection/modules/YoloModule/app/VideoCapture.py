@@ -208,7 +208,8 @@ class VideoCapture(object):
         print("Frame width          : " + str(frame_width))
         print("Frame height         : " + str(frame_height))
         
-        self.apiHandler.send_generic_get_request(params=["frame_width","frame_height"], values=[frame_width,frame_height])
+        if self.holo_endpoint:
+            self.apiHandler.send_generic_get_request(params=["frame_width","frame_height"], values=[frame_width,frame_height])
 
         currentFPS = cameraFPS
         perFrameTimeInMs = 1000 / cameraFPS
@@ -237,10 +238,12 @@ class VideoCapture(object):
             except Exception as e:
                 print("ERROR : Exception during capturing")
                 raise(e)
-
+            
             # Run Object Detection
             if self.inference:
-                detections, image, coord1, coord2 = self.yoloInference.detect(frame)
+                # EDIT_JANNIS_Coordinates  
+                # detections, image, coord1, coord2 = self.yoloInference.detect(frame)
+                detections, image = self.yoloInference.detect(frame)
 
                 fps = 1.0 / (time.time() - tFrameStart)
 
@@ -263,13 +266,9 @@ class VideoCapture(object):
                 if len(detections) > 0:
                     queue_list = []
                     for detection in detections:
-                        classLabel, confidence = detection[0], detection[1]
+                        classLabel, confidence, coordinateTopLeft, coordinateBottomRight = detection[0], detection[1], detection[2], detection[3]
                         if confidence > self.confidenceLevel:
                             
-                            # as we don't care about the color because we retrieve the current air quality from the sensor directly and not over the color of the hue lamp
-                            if "hue" in classLabel:
-                                classLabel = "hue"
-
                             queue_list.append(classLabel)
                             
                             print("Object: {}".format(classLabel))
@@ -281,7 +280,7 @@ class VideoCapture(object):
                                     # EDIT: +++++++++++++++ we alway send! +++++++++++++++++++++++++++++
                                     # we only send the notification once, when the state changes from 0 to 1
                                     # if self.apiHandler.statusHandler.statuses[classLabel] != 1:
-
+                                    '''
                                         ThingIsThere = True
                                         
                                         # if queue is already long enough, will equal to False for the first few frames
@@ -300,9 +299,10 @@ class VideoCapture(object):
                                             ThingIsThere = False
                                         
                                         if ThingIsThere:
-                                            print("Thing is there at ", time.time())
-                                            numberOfThingsInScene =  len(detections)
-                                            self.apiHandler.handleThing(thing=classLabel, display=1, coord1=coord1, coord2=coord2, numberOfThingsInScene=numberOfThingsInScene, framestart = time.time()) # send call to display all actions on the Hololens that are related with this object
+                                            '''
+                                    print("Thing is there at ", time.time())
+                                    numberOfThingsInScene =  len(detections)
+                                    self.apiHandler.handleThing(thing=classLabel, display=1, coord1=coordinateTopLeft, coord2=coordinateBottomRight, numberOfThingsInScene=numberOfThingsInScene, framestart = time.time()) # send call to display all actions on the Hololens that are related with this object
                                 
                                 # when thing is not of interest to us
                                 except KeyError:
@@ -352,7 +352,7 @@ class VideoCapture(object):
                     if not ThingIsThere:
                         # update state
                         numberOfThingsInScene =  len(detections)
-                        self.apiHandler.handleThing(thing=thing, display=0, coord1=coord1, coord2=coord2, numberOfThingsInScene=numberOfThingsInScene, framestart = time.time())
+                        # self.apiHandler.handleThing(thing=thing, display=0, coord1=coordinateTopLeft, coord2=coordinateBottomRight, numberOfThingsInScene=numberOfThingsInScene, framestart = time.time())
                         print("Thing {} is not present anymore.".format(thing))
                 
             # Calculate FPS rate at which the VideoCapture is able to process the frames
