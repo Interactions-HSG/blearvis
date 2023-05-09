@@ -66,7 +66,7 @@ public class ThunderboardHandlerList : MonoBehaviour
         numberOfThingsCurrentlyInScene = 0;
         numberOfTBCurrentlyInScene = 0;
         RecentTB = new List<(string tbID, DateTime timestamp)>();
-        handleIncomingYoloResult = true;
+        handleIncomingYoloResult = false;
         handleIncomingAoAResult = false;
         handleIncomingAoASensorData = true;
 }

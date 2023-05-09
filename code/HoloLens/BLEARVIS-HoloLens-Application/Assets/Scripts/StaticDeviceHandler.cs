@@ -30,13 +30,14 @@ public class StaticDeviceHandler : MonoBehaviour
 
     public bool NewTBHfromYoloWasSuccessful;
     public bool NewPositionSuccessful;
-    public float MaxDistanceToThing = 0.5f;
+    public float MaxDistanceToThing;
 
     // Start is called before the first frame update
     void Start()
     {
         NewTBHfromYoloWasSuccessful = true;
         NewPositionSuccessful = false;
+        MaxDistanceToThing = 0.02f;
     }
 
     // Update is called once per frame
@@ -150,24 +151,23 @@ public class StaticDeviceHandler : MonoBehaviour
     {
         var listForFirstThing = new List<Vector3>();
         var listForSecondThing = new List<Vector3>();
-        string log = "SeparateVectorsIfThereAreMultipleObjects ---";
+        string log = "\n SeparateVectorsIfThereAreMultipleObjects ---";
 
-
+        log += $"\nMaxDistanceToThing: {MaxDistanceToThing}";
         listForFirstThing.Add(list[0]);
 
         for (int i = 1; i < list.Count - 1; i++)
         {
-            var currentDistance = (list[0] - list[1]).sqrMagnitude;
-            
 
             var distToFirstList = (AverageOfVector3List(listForFirstThing) - list[i]).sqrMagnitude;
-            log += $"distToFirstList ({i}): {distToFirstList}";
+            log += $"\ndistToFirstList ({i}): {distToFirstList}";
 
             if (listForSecondThing.Count > 0)
             {
+                log += "\ncompare between 1. and 2.";
                 // if we have a point in the second list take the one with the smaller distance to the current point
                 var distToSecondList = (AverageOfVector3List(listForSecondThing) - list[i]).sqrMagnitude;
-                log += $"distToFirstList ({i}): {distToFirstList}";
+                log += $"\ndistToFirstList ({i}): {distToFirstList}";
 
                 if (distToFirstList < distToSecondList)
                 {
@@ -175,14 +175,16 @@ public class StaticDeviceHandler : MonoBehaviour
                 } else {
                     listForSecondThing.Add(list[i]);
                 }
-            } else  if (distToFirstList < MaxDistanceToThing)
+            } else  if (distToFirstList > MaxDistanceToThing)
             {
-                // otherwise check with the threshold if the current point is closer to the first list than the threshold.
-                listForFirstThing.Add(list[i]);
-            } else 
-            {
+                log += "\nin 2.";
                 // if not add it to the second list
                 listForSecondThing.Add(list[i]);
+            } else 
+            {
+                log += "\nin 1.";
+                // otherwise check with the threshold if the current point is closer to the first list than the threshold.
+                listForFirstThing.Add(list[i]);
             }
         }
 
@@ -215,6 +217,7 @@ public class StaticDeviceHandler : MonoBehaviour
             }
         }
         // */
+        Debug.Log(log);
         var lists = new List<List<Vector3>> { listForFirstThing, listForSecondThing };
         return (uri, lists);
     }
@@ -297,16 +300,36 @@ public class StaticDeviceHandler : MonoBehaviour
                 {
                     log += $"\n multiple things in scene";
                     var separatedYoloOffsets = SeparateListOfVector3IfThereAreMultipleObjects(list.Key, list.Value);
+                    log += $"\nfirst list: {separatedYoloOffsets.lists[0][0]}";
+                    log += $"\nseparatedYoloOffsets.lists.Count: {separatedYoloOffsets.lists.Count}";
+                    log += $"\nseparatedYoloOffsets.lists[0].Count: {separatedYoloOffsets.lists[0].Count}";
+                   
+                    var i = 0;
+                    foreach (var sublist in separatedYoloOffsets.lists)
+                    {
+                        log += $"\nnew list [{i}]:";
+                        foreach (var obj in sublist)
+                        {
+                            log += $"\nitem: {obj}";
+                        }
+                        log += "\n----------";
+                        i++;
+                    }
+
 
                     if (separatedYoloOffsets.lists[0].Count > 0)
                     {
+                        log += $"\nfirst thing: {separatedYoloOffsets.uri}";
                         var avg = AverageOfVector3List(separatedYoloOffsets.lists[0]);
-                        dictOfAVERAGEYoloOffsetLists.Add(list.Key + "_0", avg);
+                        dictOfAVERAGEYoloOffsetLists.Add(separatedYoloOffsets.uri + "_0", avg);
                     }
-                    else if (separatedYoloOffsets.lists[1].Count > 0)
+                    if (separatedYoloOffsets.lists[1].Count > 0)
                     {
+                        log += $"\nsecond list: {separatedYoloOffsets.lists[1][0]}";
+                        log += $"\nsecond thing: {separatedYoloOffsets.uri}";
+                        log += $"\nseparatedYoloOffsets.lists[1].Count: {separatedYoloOffsets.lists[1].Count}";
                         var avg = AverageOfVector3List(separatedYoloOffsets.lists[1]);
-                        dictOfAVERAGEYoloOffsetLists.Add(list.Key + "_1", avg);
+                        dictOfAVERAGEYoloOffsetLists.Add(separatedYoloOffsets.uri + "_1", avg);
                     }
                 } else
                 {
@@ -334,8 +357,8 @@ public class StaticDeviceHandler : MonoBehaviour
         var id = "";
         var uri = "";
 
-        log += $"number of avg AoA Offsets: {dictOfAVERAGEAoaOffsetLists.Count}";
-        log += $"number of avg Yolo Offsets: {dictOfAVERAGEYoloOffsetLists.Count}";
+        log += $"\nnumber of avg AoA Offsets: {dictOfAVERAGEAoaOffsetLists.Count}";
+        log += $"\nnumber of avg Yolo Offsets: {dictOfAVERAGEYoloOffsetLists.Count}";
 
         if (ThunderboardHandlerList.expectingMultipleThings)
         {
@@ -435,9 +458,16 @@ public class StaticDeviceHandler : MonoBehaviour
                 var tbh = CreateNewTBH();
                 log += $"\nadded new tbh: {ThunderboardHandlerList.thunderboardHandlerList[ThunderboardHandlerList.thunderboardHandlerList.Count - 1]}";
 
-                tbh.ThingURI = thing.Item1;
+                // the URI might have an index at the end like "_0". We delete it here again
+                tbh.ThingURI = thing.Item1.Split('_')[0];
                 tbh.ThunderboardID = thing.Item2;
                 newOffset = thing.Item3;
+
+                if (newOffset == new Vector3(0,0,0))
+                {
+                    continue;
+                }
+                log += $"\nnewOffset: {newOffset}";
 
                 if (id != "")
                 {
@@ -453,19 +483,19 @@ public class StaticDeviceHandler : MonoBehaviour
 
                     tbh.GetDataFromThing = true;
                     tbh.GetDataFromThingCourutineRunning = true;
-
+                    tbh.SetIDText();
                 }
 
-                tbh.SetIDText();
+               
                 tbh.SetThingURIText();
 
                 tbh.ThunderboardInfoBox.GetComponent<Billboard>().enabled = false;
-
+                tbh.ThunderboardInfoBox.GetComponent<Orbital>().enabled = true;
                 tbh.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset = newOffset;
                 tbh.ThunderboardInfoBox.SetActive(true);
 
                 tbh.ThunderboardInfoBox.GetComponent<Billboard>().enabled = true;
-
+               
                 // StartCoroutine(PositionHandler.MoveLocalOffset(orbital, curOffset, newOffset, billboard));
 
                 tbh.TBCurrentLocalOffsetInWorld = newOffset;
