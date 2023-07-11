@@ -1,17 +1,12 @@
-# BLEARVIS
+# MR Object Identification and Interaction: Fusing Object Situation Information from Heterogeneous Sources
 
-‼️ WORK IN PROGRESS‼️
+This is the accompaning repository for the publication:
 
-by
-Author 1,
-Author 2,
-etc
+> Jannis Strecker, Khakim Akhunov, Federico Carbone, Kimberly García, Kenan Bektaş, Andres Gomez, Simon Mayer, and Kasim Sinan Yildirim. 2023. MR Object Identification and Interaction: Fusing Object Situation Information from Heterogeneous
+Sources. Proc. ACM Interact. Mob. Wearable Ubiquitous Technol. 7, 3 (September 2023), 25 pages.
 
-> 
 
-> Fill out the sections below with the information for your paper.
-
-This paper has been submitted for publication in *Some Journal/Conference*.
+This paper has been submitted for publication in *Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies (IMWUT*.
 
 > Brief description of what this paper is about (2-3 sentences). Include a
 > figure as well with the main result of your paper.
@@ -22,10 +17,7 @@ This paper has been submitted for publication in *Some Journal/Conference*.
 
 
 ## Abstract
-(Please review & revise!)
-We propose an augmented reality (AR) system that can detect and localize objects of interest. The visual object detection is maintained by a state-of-the-art and real-time approach (YOLO v4) that makes use of the front facing camera of a head-mounted display (or HMD, e.g., HoloLens 2). The localization is addressed by a transmitter (i.e., Thunderboard) that is attached to the object of interest and an antenna array (i.e., Bluetooth 5.1. receiver) that detects the angle of arrival (AOA) of the signals. The antenna array is mounted on top of the HMD. The AOA data are sent (via MQTT publish-subscribe protocol) with low latency from the antenna to a Unity app that is installed on the HMD. The system reliably localize an object even if it remains beyond the visual line of sight (BVLOS). 
-
-![Components](Components.png)
+The increasing number of objects in ubiquitous computing environments creates a need for efective object detection and identifcation mechanisms that permit users to intuitively initiate interactions with these objects. While multiple approaches to such object detection – including through visual object detection, fducial markers, relative localization, or absolute spatial referencing – are available, each of these sufers from drawbacks that limit their applicability. In this paper, we propose ODIF, an architecture that permits the fusion of object situation information from such heterogeneous sources and that remains vertically and horizontally modular to allow extending and upgrading systems that are built according to this architecture. We furthermore present BLEARVIS, a prototype system that builds on the proposed architecture and integrates computer-vision (CV) based object detection with radio-frequency (RF) angle of arrival (AoA) estimation to identify BLE-tagged objects. In our system, the front camera of a Mixed Reality (MR) head-mounted display (HMD) provides a live image stream to a vision-based object detection module, while an antenna array that is mounted on the HMD collects AoA information from ambient devices. In this way, BLEARVIS is able to diferentiate between visually identical objects in the same environment and can overlay MR content that relates to these devices (data and controls) on their physical location. We include experimental evaluations of both, the CV-based object detection and the RF-based AoA Estimation, and discuss the applicability of the combined RF and CV pipelines in diferent ubiquitous computing scenarios. BLEARVIS can be a potential starting point to spawn the integration of diverse object detection, identifcation, and interaction approaches that function across the electromagnetic spectrum.
 
 ## Software implementation
 
