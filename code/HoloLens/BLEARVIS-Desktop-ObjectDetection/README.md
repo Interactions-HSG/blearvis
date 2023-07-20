@@ -9,7 +9,7 @@ With this repository you can access and evaluate the camera stream of your Micro
 The code is largely a combination of two repositories.
 
 - Access video-stream of Hololens PV camera: [IntelligentEdgeHOL](https://github.com/Azure/IntelligentEdgeHOL)
-- Run YOLOv7 object detection [/WongKinYiu/yolov7](https://github.com/WongKinYiu/yolov7) with ONNX weights [YOLOv7onnx.ipynb](https://colab.research.google.com/github/WongKinYiu/yolov7/blob/main/tools/YOLOv7onnx.ipynb)
+- Run YOLOv7 object detection [/WongKinYiu/yolov7](https://github.com/WongKinYiu/yolov7) and [https://github.com/ibaiGorordo/ONNX-YOLOv7-Object-Detection](https://github.com/ibaiGorordo/ONNX-YOLOv7-Object-Detection) with ONNX weights [YOLOv7onnx.ipynb](https://colab.research.google.com/github/WongKinYiu/yolov7/blob/main/tools/YOLOv7onnx.ipynb)
 
 ## Weights
 
