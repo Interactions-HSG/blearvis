@@ -1,7 +1,7 @@
 # Hololens YOLOv4 Object Detection
 
-This code is largely Janick's code from here: [https://github.com/Interactions-HSG/21-MT-JanickSpirig-HoloLens-ObjectDetection](https://github.com/Interactions-HSG/21-MT-JanickSpirig-HoloLens-ObjectDetection). 
-There are some adaptions concerning the Outgoing API.
+This code is largely based on: [https://github.com/Interactions-HSG/21-MT-JanickSpirig-HoloLens-ObjectDetection](https://github.com/Interactions-HSG/21-MT-JanickSpirig-HoloLens-ObjectDetection). 
+There are some adaptions concerning the Outgoing API and the YOLO version was changed to YOLOv7 using ONNX weights.
 
 ---
 
@@ -9,13 +9,11 @@ With this repository you can access and evaluate the camera stream of your Micro
 The code is largely a combination of two repositories.
 
 - Access video-stream of Hololens PV camera: [IntelligentEdgeHOL](https://github.com/Azure/IntelligentEdgeHOL)
-- Run YOLOv4 object detection: [tensorflow-yolov4-tflite](https://github.com/theAIGuysCode/tensorflow-yolov4-tflite)
+- Run YOLOv7 object detection [/WongKinYiu/yolov7](https://github.com/WongKinYiu/yolov7) with ONNX weights [YOLOv7onnx.ipynb](https://colab.research.google.com/github/WongKinYiu/yolov7/blob/main/tools/YOLOv7onnx.ipynb)
 
-## Imported links Interactions @ ICS-HSG
+## Weights
 
-- [Pre-trained weights](https://drive.google.com/file/d/10xhruakVoIGTGAzH7BTxPX7rrcfWJByo/view?usp=sharing)
-- [Dataset](https://drive.google.com/file/d/1BIaNZc5XUflGz9IqpJOeGOvYWzgVebk-/view?usp=sharing) of train images and label files
-- [Dataset](https://drive.google.com/file/d/1MYIQ4cp_okxA7f0QPiTUYUpZsLWIr6gn/view?usp=sharing) of test images and label files
+- Pre-trained weights for BLEARVIS: [./modules/YoloModule/app/detector/data](https://github.com/Interactions-HSG/blearvis/tree/main/code/HoloLens/BLEARVIS-Desktop-ObjectDetection/modules/YoloModule/app/detector/data/) with the two robots.
 
 ## Geeting Started
 
@@ -26,7 +24,8 @@ The code is largely a combination of two repositories.
 ### [2] Clone repository
 
 `git clone https://github.com/Interactions-HSG/blearvis`
-Extract the folder _code\HoloLens\BLEARVIS-Desktop-Object-Detection_.
+
+Extract the folder _code/HoloLens/BLEARVIS-Desktop-Object-Detection_.
 
 ### [3] Setup YOLOv4
 
@@ -87,7 +86,7 @@ Define the options in the file `config.yml` according to your needs.
 | `SHOW_OUTPUT`          | Defines whether an output video should be produced under `RESULT_PATH` which contains rectangle boxes and class labels. Set to `True` if you want to double-check the YOLOv4 detections                                                                                                                                                                                                                                                                                                                                   |
 | `RESULT_PATH`          | Defines the path unser which the result video will be saved (if `SHOW_OUTPUT` is set to `True`)                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `HOLO_ENDPOINT`        | Defines whether an information should be sent to a Hololens or any arbitrary endpoint everytime an object appears in the user's view. Set to `True` if you have set up an endpoint on your Hololens that is able to receive incoming requests. [This example](https://github.com/janick187/Hololens-frontend/blob/master/Assets/Scripts/HTTPListener.cs) shows you how such an endpoint can be setup within a Unity application                                                                                           |
-| `HOLO_ENDPOINT_URL`    | Defines the URL and Port of the endpoint (e.g., http://10.2.1.233:5050) to which an HTTP-GET-request will be sent to whenever a new object has been detected (`http://{HOLO_ENDPOINT_URL}/?{class_label}=1`). Remember to define the port in the URL if necessary.                                                                                                                                                                                                                                                        |
+| `HOLO_ENDPOINT_URL`    | Defines the URL and Port of the endpoint (e.g., http://192.168.0.2:5050) to which an HTTP-GET-request will be sent to whenever a new object has been detected (`http://{HOLO_ENDPOINT_URL}/?{class_label}=1`). Remember to define the port in the URL if necessary.                                                                                                                                                                                                                                                        |
 
 ### [5] Run the detection
 
