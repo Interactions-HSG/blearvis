@@ -31,36 +31,17 @@ class APIHandler:
         except requests.RequestException as e:
             print("OOPS!! General Error")
             print(str(e))
-
-        
         else:
             return
         
     def handleThing(self, thing, display, coord1, coord2, numberOfThingsInScene, framestart):
 
-        # if self.statusHandler.statuses[thing] != display:
         framestart = int(framestart)
         url = "{}/?{}={}&coordTLx={}&coordTLy={}&coordBRx={}&coordBRy={}&&numberOfThingsInScene={}&framestart={}".format(self.holo_url, urllib.parse.quote(thing), str(display), str(int(coord1[0])), str(int(coord1[1])), str(int(coord2[0])), str(int(coord2[1])), str(numberOfThingsInScene), str(framestart))
-        # url = f"{self.holo_url}/?{urllib.parse.quote(thing)}={str(display)}&coordTLx={ str(int(coord1[0]))}&coordTLy={str(int(coord1[1]))}&coordBRx={str(int(coord2[0]))}&coordBRy={str(int(coord2[1]))}&numberOfThingsInScene={numberOfThingsInScene}"
-        
-        # url = f"{self.holo_url}"
-        params = {
-            urllib.parse.quote(thing) : str(display), 
-            'coordTLx': str(int(coord1[0])),
-            'coordTLy': str(int(coord1[1])),
-            'coordBRx': str(int(coord2[0])),
-            'coordBRy': str(int(coord2[1])),
-            'numberOfThingsInScene': numberOfThingsInScene
-            }
-        # print(url + urllib.parse.urlencode(params))
-        
-        # full_url = f"{url}/{urllib.parse.urlencode(params)}"
-        
+              
         print(url)
             
         self.send_get_request(url) 
-            # only send request to hololens if thing is there
-            #  if (display == 1):
         
         # update the current state, whether we are displaying the thing on the Hololens or not
         self.statusHandler.statuses[thing] = display

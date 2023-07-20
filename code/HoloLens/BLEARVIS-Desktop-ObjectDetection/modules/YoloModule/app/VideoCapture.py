@@ -241,8 +241,7 @@ class VideoCapture(object):
             
             # Run Object Detection
             if self.inference:
-                # EDIT_JANNIS_Coordinates  
-                # detections, image, coord1, coord2 = self.yoloInference.detect(frame)
+                
                 detections, image = self.yoloInference.detect(frame)
 
                 fps = 1.0 / (time.time() - tFrameStart)
@@ -277,29 +276,6 @@ class VideoCapture(object):
                             # if notification should be send out to endpoint that thing is present
                             if self.holo_endpoint:
                                 try:
-                                    # EDIT: +++++++++++++++ we alway send! +++++++++++++++++++++++++++++
-                                    # we only send the notification once, when the state changes from 0 to 1
-                                    # if self.apiHandler.statusHandler.statuses[classLabel] != 1:
-                                    '''
-                                        ThingIsThere = True
-                                        
-                                        # if queue is already long enough, will equal to False for the first few frames
-                                        if len(detections_queue) >= index_boundary:  
-                                            # iterate over each previous detection
-                                            for i in detections_queue:
-                                                # check if thing has been detected in each previous frame of the queue
-                                                if any(classLabel in sl for sl in i):
-                                                    continue
-                                                else:
-                                                    # thing is relatively new / user is not looking long enough at the thing
-                                                    ThingIsThere = False
-                                                    break 
-                                        else:
-                                            # thing is there and notification has already been sent
-                                            ThingIsThere = False
-                                        
-                                        if ThingIsThere:
-                                            '''
                                     print("Thing is there at ", time.time())
                                     numberOfThingsInScene =  len(detections)
                                     self.apiHandler.handleThing(thing=classLabel, display=1, coord1=coordinateTopLeft, coord2=coordinateBottomRight, numberOfThingsInScene=numberOfThingsInScene, framestart = time.time()) # send call to display all actions on the Hololens that are related with this object
@@ -316,7 +292,6 @@ class VideoCapture(object):
                 try:
                     if len(queue_list) > 0:
                         # made some detections
-                        # print("made some detections ---------------------------------------------------------------------- +++++++++++++++++++++++++++++++ ---------------------------------")
                         detections_queue.append(queue_list)
                         queue_list = []
                     else:
