@@ -1,4 +1,4 @@
-# Hololens YOLOv4 Object Detection
+# Hololens YOLOv7 Object Detection
 
 This code is largely based on: [https://github.com/Interactions-HSG/21-MT-JanickSpirig-HoloLens-ObjectDetection](https://github.com/Interactions-HSG/21-MT-JanickSpirig-HoloLens-ObjectDetection). 
 There are some adaptions concerning the Outgoing API and the YOLO version was changed to YOLOv7 using ONNX weights.
