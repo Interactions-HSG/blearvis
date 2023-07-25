@@ -7,12 +7,11 @@ We used the following hardware for our prototype:
 - Antenna Array 4x4 (From the [Wireless Gecko EFR32xG22 Family](https://www.silabs.com/wireless/gecko-series-2/efr32xg22))
 - Raspberry Pi 3 Model B
 
-# Getting Started
 This code had been tested under amd64 running [Arch Linux](https://archlinux.org/) and aarch64 running [Raspberry Pi OS](https://www.raspberrypi.com/software/)
 
-## Dependencies
+## 1. Dependencies
 
-Following compilation steps can be executed on a PC or directly on the host device (Raspberry Pi)
+The following compilation steps can be executed on a PC or directly on the host device (Raspberry Pi)
 
 ### Linux
 Inter Process Communication is achieved through an MQTT Broker, that allows the execution of different pieces of code in separate machines if needed.
@@ -36,7 +35,7 @@ The code uses [mosquitto](https://mosquitto.org/).
 > cd exported_aoa_locator/app/bluetooth/example_host/aoa_locator  
 > make
 
-### Build and flash Sensor Tag firmware
+## 2. Build and flash Sensor Tag firmware
 Connect the Thunderboard to you computer and run the following commands: 
 
 > cd silabs_transmitter_makefile  
@@ -48,7 +47,7 @@ This requires:
 - [arm-none-eabi-gcc](https://developer.arm.com/downloads/-/gnu-rm)
 - [JLink Commander](https://www.segger.com/products/debug-probes/j-link/tools/j-link-software/#j-link-commander)
 
-### Build and flash RF receiver firmware
+## 3. Build and flash RF receiver firmware
 Connect the AoA Locator device to you computer and run the following commands: 
 
 > cd silabs_receiver_makefile  
@@ -60,14 +59,14 @@ This requires:
 - [arm-none-eabi-gcc](https://developer.arm.com/downloads/-/gnu-rm)
 - [JLink Commander](https://www.segger.com/products/debug-probes/j-link/tools/j-link-software/#j-link-commander)
 
-### Sensor Data Receiver
+## 4. Sensor Data Receiver
 Install python dependencies.
 This step must be executed on the host device (Raspberry Pi).
 
 > pip install -r sensor_data_receiver/requirements.txt
 
-## Starting the environment
-Following steps must be executed on the host device (Raspberry Pi).
+## 5. Starting the environment
+The following steps must be executed on the host device (Raspberry Pi).
 
 ### MQTT Broker
 
