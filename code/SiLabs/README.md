@@ -4,10 +4,10 @@ With the code in this folder you can deploy and run the BLEARVIS BLE Module.
 
 We used the following hardware for our prototype:
 - EFR32BG22 Thunderboard (Sensor Tag)
-- Antenna Array 4x4 (From the [Wireless Gecko EFR32xG22 Family](https://www.silabs.com/wireless/gecko-series-2/efr32xg22))
-- Raspberry Pi 3 Model B
+- Antenna Array 4x4 (AoA Locator; from the [Wireless Gecko EFR32xG22 Family](https://www.silabs.com/wireless/gecko-series-2/efr32xg22))
+- Raspberry Pi 3 Model B (Host Device)
 
-This code had been tested under amd64 running [Arch Linux](https://archlinux.org/) and aarch64 running [Raspberry Pi OS](https://www.raspberrypi.com/software/)
+This code had been tested under amd64 running [Arch Linux](https://archlinux.org/) and aarch64 running [Raspberry Pi OS](https://www.raspberrypi.com/software/).
 
 ## 1. Dependencies
 
