@@ -34,6 +34,9 @@ public class ThunderboardHandler : MonoBehaviour
     public GameObject BatteryText;
     public GameObject Soil;
     public GameObject SoilText;
+    public GameObject WaterText;
+    public GameObject MotorText;
+    public GameObject Motor;
 
     [Header("Prefab")]
     public GameObject ThunderboardInfoBox;
@@ -66,6 +69,8 @@ public class ThunderboardHandler : MonoBehaviour
     public int SerialNumber;
     public (int ph, int moisture, int density, int nitrate) SoilCondition;
     public float BatteryVoltage;
+    public int WaterLevel;
+    public float MotorCurrent;
     public string thingIP;
     public int NumberOfYoloCoordinatesReceived;
     public int NumberOfAoAsReceived;
@@ -126,15 +131,7 @@ public class ThunderboardHandler : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-      
-
-        /*
-        if ((DateTime.UtcNow - LastYoloUpdate).TotalSeconds > 10 && (DateTime.UtcNow - LastAoAUpdate).TotalSeconds > 10) {
-            Debug.Log($"Removing tb because of inactivity: {ThunderboardID}/{ThingURI}");
-            ThunderboardInfoBox.SetActive(false);
-            RemoveInfoBox(ThunderboardInfoBox);
-        }
-        //*/
+     
         if (GetDataFromThingCourutineRunning && GetDataFromThing)
         {
             GetDataFromThing = false;
@@ -170,27 +167,6 @@ public class ThunderboardHandler : MonoBehaviour
                     TractorInfo.SetActive(true);
             }
         }
-
-
-        /*
-        if ((DateTime.UtcNow -LastYoloOffset.timestamp).TotalSeconds < 3)
-        {
-            IndicatorObjectDetection.SetActive(true);
-        }
-        else
-        {
-            IndicatorObjectDetection.SetActive(false);
-        }
-
-        if ((DateTime.UtcNow - LastAoAOffset.timestamp).TotalSeconds < 3)
-        {
-            IndicatorBLE.SetActive(true);
-        }
-        else
-        {
-            IndicatorBLE.SetActive(false);
-        }
-        //*/
     }
 
   
@@ -207,17 +183,6 @@ public class ThunderboardHandler : MonoBehaviour
         var curAngleDiff = Mathf.Abs(AngleOfArrival - aoa);
         Debug.Log($"curAngle: {AngleOfArrival}, newAngle: {aoa}, diff: {curAngleDiff}");
 
-        /*
-        //  curAngle: 6.17, newAngle: -68.12, last diff: 54.29
-        // curAngle: 6.17, newAngle: -70.05, cur diff: 76.22
-        if (curAngleDiff > 10 && Math.Abs(lastAngleDifference - curAngleDiff) > 10)
-        {
-            Debug.Log("not setting new angle, diff > 10");
-            SetIDText();
-            SetSensorText();
-            return;
-        }
-        //*/
         //lastAngleDifference = curAngleDiff;
         if (AngleOfArrival == 0 || (curAngleDiff < 20 && !PositionHandler.CameraIsMovingTooMuch()) || curAngleDiff < 40)
         {
@@ -238,7 +203,6 @@ public class ThunderboardHandler : MonoBehaviour
 
             //SetOffsetText();
 
-            //ThunderboardInfoBox.SetActive(true);
             LastAoAUpdate = DateTime.UtcNow;
         } else
         {
@@ -256,20 +220,13 @@ public class ThunderboardHandler : MonoBehaviour
     /// <param name="value">the value read by the sensor</param>
     public void UpdateFromSensorDataMQTTMessage(string sensorType, float value)
     {
-        //LastTemperatureSensorUpdate = (LastTemperatureSensorUpdate == default(DateTime)) ? DateTime.UtcNow : LastTemperatureSensorUpdate;
-        //LastHumiditySensorUpdate = (LastHumiditySensorUpdate == default(DateTime)) ? DateTime.UtcNow : LastHumiditySensorUpdate;
+        
         Debug.Log($"ThunderboardHandlerList.MACofFirstBLETag: {ThunderboardHandlerList.MACofFirstBLETag}");
         Debug.Log($"ThunderboardID: {ThunderboardID}");
 
         if (sensorType == "temp" && ThunderboardHandlerList.MACofFirstBLETag == this.ThunderboardID)
         {
-            /*
-            if ((DateTime.UtcNow - LastTemperatureSensorUpdate).TotalSeconds < 0.25)
-            {
-                //Debug.Log($"Last sensor update was less than 0.5s ago. Not updating.");
-                return;
-            }
-            */
+          
             // only update if the value has changed.
             if (SensorData.temperature == value) { return; }
             SensorData.temperature = value;
@@ -279,13 +236,7 @@ public class ThunderboardHandler : MonoBehaviour
         } 
         else if (sensorType == "hum" && ThunderboardHandlerList.MACofFirstBLETag != this.ThunderboardID)
         {
-            /*
-            if ((DateTime.UtcNow - LastHumiditySensorUpdate).TotalSeconds < 0.25)
-            {
-                //Debug.Log($"Last sensor update was less than 0.5s ago. Not updating.");
-                return;
-            }
-        //*/
+           
             if (SensorData.humidity == value) { return; }
             SensorData.humidity = value;
             LastHumiditySensorUpdate = DateTime.UtcNow;
@@ -342,16 +293,6 @@ public class ThunderboardHandler : MonoBehaviour
         if (SetNewPositionFromAoA)
         {
             CalculateNewOffsetFromAoA();
-            /*
-            if (!PositionHandler.CameraIsMovingTooMuch())
-            {
-                CalculateNewOffsetFromAoA();
-            }
-            else
-            {
-                Debug.Log("AoA: Camera is moving too much. Not updating the offset.");
-            }
-            */
             SetNewPositionFromAoA = false;
         }
 
@@ -366,17 +307,6 @@ public class ThunderboardHandler : MonoBehaviour
             //PositionHandler.CalculateNewOffsetFromYoloStaticDevice();
 
             Debug.Log($"SetNewPositionFromYolo: {SetNewPositionFromYolo}");
-            /*
-            if (!PositionHandler.CameraIsMovingTooMuch())
-            {
-                Debug.Log($"!PositionHandler.CameraIsMovingTooMuch(): {!PositionHandler.CameraIsMovingTooMuch()}");
-                CalculateNewOffsetFromYolo();
-            }
-            else
-            {
-                Debug.Log("Yolo: Camera is moving too much. Not updating the offset.");
-            }
-            //*/
             SetNewPositionFromYolo = false;
         }
         else
@@ -386,159 +316,6 @@ public class ThunderboardHandler : MonoBehaviour
             Debug.Log($"SetNewPositionFromYolo: {SetNewPositionFromYolo}");
         }
     }
-
-
-
-    /*
-    /// <summary>
-    /// Updates the ThunderboardInfoBox's orbital.localOffset.z based on a raycast in the 
-    /// center of the bounding box coordinates from YOLO.
-    /// </summary>
-    public void CalculateNewOffsetFromYolo()
-    {
-        string log = $"--- CalculateNewOffsetFromYolo ---";
-
-        // do a Raycast in each corner of the BoundingBox and the center.
-        // choose the smalles Z -> possibly closest point of object to user
-        Vector2 centerBBox = Vector2.Lerp(BBoxPixelTopLeft, BBoxPixelBottomRight, 0.5f);
-
-        var newOffsetFromRayCenter = PositionHandler.ScreenToCameraPointThroughRaycast(centerBBox, $"C_{_raycastCounter}");
-        // from the corners of the bbox go more towards the center. might make hitting the object more likely
-        var tl = Vector2.Lerp(BBoxPixelTopLeft, centerBBox, 0.4f);
-        var newOffsetFromRayTopLeft = PositionHandler.ScreenToCameraPointThroughRaycast(tl, $"TL_{_raycastCounter}");
-        //
-        var br = Vector2.Lerp(BBoxPixelBottomRight, centerBBox, 0.4f);
-        var NewOffsetFromRayBottomRight = PositionHandler.ScreenToCameraPointThroughRaycast(br, $"BR_{_raycastCounter}");
-
-        var topRight = new Vector2(BBoxPixelBottomRight.x, BBoxPixelTopLeft.y);
-
-        topRight = Vector2.Lerp(topRight, centerBBox, 0.4f);
-        var newOffsetFromRayTopRight = PositionHandler.ScreenToCameraPointThroughRaycast(topRight, $"TR_{_raycastCounter}");
-
-        var bottomLeft = new Vector2(BBoxPixelTopLeft.x, BBoxPixelBottomRight.y);
-        bottomLeft = Vector2.Lerp(bottomLeft, centerBBox, 0.4f);
-        var newOffsetFromRayBottomLeft = PositionHandler.ScreenToCameraPointThroughRaycast(bottomLeft, $"BL_{_raycastCounter}");
-        _raycastCounter++;
-
-
-        var meanX = (newOffsetFromRayCenter.x + newOffsetFromRayTopLeft.x + NewOffsetFromRayBottomRight.x +
-           newOffsetFromRayTopRight.x + newOffsetFromRayBottomLeft.x) / 5f;
-
-        var maxY = Mathf.Max(newOffsetFromRayCenter.y, newOffsetFromRayTopLeft.y, NewOffsetFromRayBottomRight.y,
-           newOffsetFromRayTopRight.y, newOffsetFromRayBottomLeft.y);
-
-        var minY = Mathf.Min(newOffsetFromRayCenter.y, newOffsetFromRayTopLeft.y, NewOffsetFromRayBottomRight.y,
-           newOffsetFromRayTopRight.y, newOffsetFromRayBottomLeft.y);
-
-        // get the z-value that is closest to the HL2 that is not 0
-        var zs = new[] {newOffsetFromRayCenter.z, newOffsetFromRayTopLeft.z, NewOffsetFromRayBottomRight.z,
-            newOffsetFromRayTopRight.z, newOffsetFromRayBottomLeft.z};
-        float closestZ = zs.Where(z => z != 0).DefaultIfEmpty().Min();
-        // var closestZ = Mathf.Min(newOffsetFromRayCenter.z, newOffsetFromRayTopLeft.z, NewOffsetFromRayBottomRight.z, newOffsetFromRayTopRight.z, newOffsetFromRayBottomLeft.z);
-
-        var bboxHeight = Mathf.Abs(maxY - minY);
-        log += $"\nbboxHeight: {bboxHeight}";
-
-
-
-        // keep the InfoBox at least 0.5m away from the user
-        //closestZ += 0.2f;
-        closestZ = (closestZ <= 0.7f) ? 0.7f : closestZ;
-
-        // +(bboxHeight / 2)
-        var newLocalOffset = new Vector3(meanX, maxY+bboxHeight/2, closestZ);
-        log += $"\nnewLocalOffset: {meanX}, {maxY}, {closestZ}";
-        log += $"\nnewLocalOffset + y-bbox: {newLocalOffset}";
-
-        var thunderboardInfoBoxTransform = ThunderboardInfoBox.GetComponent<Transform>();
-        var curPosition = thunderboardInfoBoxTransform.position;
-        log += $"\ncurPosition: {curPosition}";
-
-        var orbital = ThunderboardInfoBox.GetComponent<Orbital>();
-        orbital.enabled = true;
-        orbital.UpdateLinkedTransform = false;
-        var curLocalOffset = orbital.LocalOffset;
-        log += $"\ncurLocalOffset: {curLocalOffset}";
-        //log += $"\nnewPosition: {newPosFromRay}";
-
-        ///*
-        if (newZ > 2)
-        {
-            log += $"\nz > 1: {newZ}";
-            var newScale = (newZ > 3) ? 3 : newZ;
-            thunderboardInfoBoxTransform.localScale = new Vector3(newScale, newScale, newScale);
-        }
-        ///
-
-        log += $"\ntime diff in s: {(DateTime.UtcNow - LastYoloUpdate).TotalSeconds}";
-        //if ((DateTime.UtcNow - LastYoloUpdate).TotalSeconds > 2)
-        //{
-        //var orbital = ThunderboardInfoBox.GetComponent<Orbital>();
-        
-
-        var billboard = ThunderboardInfoBox.GetComponent<Billboard>();
-        billboard.enabled = false;
-        var radialView = ThunderboardInfoBox.GetComponent<RadialView>();
-        radialView.enabled = true;
-        radialView.UpdateLinkedTransform = true;
-
-
-
-        // position the InfoBox in the middle of the object (x), above it (y+0.5*bboxHeight), and closest z (newZ)
-        // var newRawOffset = new Vector3(newOffsetFromRayCenter.x, newOffsetFromRayCenter.y, closestZ);
-        // log += $"\nnewRawOffset: {newRawOffset}";
-        //newRawOffset = Camera.main.transform.position - newRawOffset;
-        //  newRawOffset.y+0.7f*bboxHeight
-        // var newLocalOffset = new Vector3(newRawOffset.x, newRawOffset.y, newRawOffset.z);
-        //var newLocalOffset = new Vector3(newRawOffset.x, newRawOffset.y, newZ);
-        // log += $"\nnewLocalOffset: {newLocalOffset}";
-
-
-        var zHasChangedMuch = (Mathf.Abs(closestZ - curLocalOffset.z) > 0.5); //&& (Vector3.Distance(curLocalOffset, newLocalOffset) < 0.1);
-        log += $"\nzHasChangedTooMuch: {zHasChangedMuch}";
-        log += $"\nnew vs cur offset: {Vector3.Distance(curLocalOffset, newLocalOffset)}";
-
-        // Vector3.Distance(curLocalOffset, newLocalOffset) > 0.1 &&
-        //if (!zHasChangedMuch)
-        //{
-
-        // save new Offset
-        LastYoloOffset = (newLocalOffset, LastYoloUpdate);
-        //ThunderboardInfoBox.SetActive(true);
-        Last5YoloOffsets.Add(newLocalOffset);
-
-        
-
-        if ((Last5YoloOffsets.Count > 1 && ThunderboardHandlerList.expectingAoA && Last5AoAOffsets.Count > 5) 
-            || (Last5YoloOffsets.Count > 1 && !ThunderboardHandlerList.expectingAoA))
-        {
-            ThunderboardHandlerList.handleIncomingYoloResult = false;
-            StaticDeviceHandler.SetTBPositionForStaticDevice(this, orbital, billboard);
-        }
-
-        
-        log += $"\n--- CalculateNewOffsetFromYolo --- end ---";
-        Debug.Log(log);
-
-        SetOffsetText();
-
-        // PositionHandler.UpdateLocalOffsetStaticObject(this, orbital, billboard); 
-
-        // call function to apply the new offset
-        //PositionHandler.UpdateLocalOffsetSensorFusion(this, orbital, billboard, radialView);
-
-        //StartCoroutine(PositionHandler.MoveLocalOffset(orbital, curLocalOffset, newLocalOffset, billboard));
-        //LastYoloUpdate = DateTime.UtcNow;
-        //}
-        //}
-
-
-        
-       
-
-    }
-    //*/
-
 
 
     /// <summary>
@@ -585,32 +362,7 @@ public class ThunderboardHandler : MonoBehaviour
             log += $"--- CalculateNewOffsetFromAoA --- end ---";
             Debug.Log(log);
 
-            /*
-            if ((Last5AoAOffsets.Count > 5 && ThunderboardHandlerList.expectingYolo && Last5YoloOffsets.Count > 2)
-            || (Last5YoloOffsets.Count > 5 && !ThunderboardHandlerList.expectingYolo))
-            {
-                StaticDeviceHandler.SetTBPositionForStaticDevice(this, orbital, billboard);
-            }
-            */
-
-            // PositionHandler.UpdateLocalOffsetStaticObject(this, orbital, billboard);
-
             PositionHandler.UpdateLocalOffsetSensorFusion(this, orbital, billboard);
-
-            // StartCoroutine(PositionHandler.MoveLocalOffset(orbital, curLocalOffset, newLocalOffset, billboard));
-
-            //thunderboardInfoBoxTransform.position = new Vector3(newPosition.x, newPosition.y, newPosition.z);
-
-            //var newRotation = CalculateRotationFromAngle(thunderboardInfoBoxTransform, AngleOfArrival);
-            //thunderboardInfoBoxTransform.LookAt(Camera.main.transform);
-            //var n = Camera.main.transform.position - thunderboardInfoBoxTransform.position;
-
-            //thunderboardInfoBoxTransform.localRotation = newRotation;
-
-           
-
-           
-
         }
         catch (Exception e)
         {
@@ -761,8 +513,6 @@ public class ThunderboardHandler : MonoBehaviour
     }
 
     
-
-   
 
     /// <summary>
     /// Hides a given ThunderboardInfobox and deletes it's associated ThunderboardHandler.

@@ -67,53 +67,6 @@ public class PositionHandler : MonoBehaviour
         
     }
 
-    private void FixedUpdate()
-    {
-        CheckCameraVelocity();
-    }
-
-    private void CheckCameraVelocity()
-    {
-
-    Quaternion deltaRotation = _mainCamera.transform.rotation * Quaternion.Inverse(_lastCameraRotation);
-        string log = "--- CheckCamerasAngularVelocity ---";
-        log += $"\nlastCameraRotation: {_lastCameraRotation}";
-        log += $"\ncurCameraRotation: {_mainCamera.transform.rotation}";
-        _lastCameraRotation = _mainCamera.transform.rotation;
-
-        deltaRotation.ToAngleAxis(out var angle, out var axis);
-
-        angle *= Mathf.Deg2Rad;
-
-        var angularVelocity = (1.0f / Time.deltaTime) * angle * axis;
-        log += $"\nangularVelocity: {angularVelocity}";
-
-        // This camera's motion in units per second as it was during the last frame. 
-        // probably translation velocity
-        var camVelocity = _mainCamera.velocity;
-        log += $"\ncamVelocity: {camVelocity}";
-
-        var angularVelocityIsTooHigh = Mathf.Abs(angularVelocity.x) > MaxAngularVelocity   // 0.25
-                                        || Mathf.Abs(angularVelocity.y) > MaxAngularVelocity
-                                        || Mathf.Abs(angularVelocity.z) > MaxAngularVelocity;
-        var velocityIsTooHigh = Mathf.Abs(camVelocity.x) > MaxTranslationVelocity       // 0.27
-                                || Mathf.Abs(camVelocity.y) > MaxTranslationVelocity
-                                || Mathf.Abs(camVelocity.z) > MaxTranslationVelocity;
-
-        if (angularVelocityIsTooHigh || velocityIsTooHigh)
-        {
-            log += $"\nAVtooHigh: {angularVelocityIsTooHigh}";
-            log += $"\nVtooHigh: {velocityIsTooHigh}";
-            _cameraIsMovingTooMuch = true;
-        } else
-        {
-            _cameraIsMovingTooMuch = false;
-        }
-        log += $"\n_cameraIsMovingTooMuch: {_cameraIsMovingTooMuch}";
-        //Debug.Log(log);
-
-    }
-
     /// <summary>
     /// Check whether the camera (aka user's head) is moving too much with respect to the last frame.
     /// Then NO new offset is set to prevent the InfoBox to move with the users FoV.
@@ -202,32 +155,6 @@ public class PositionHandler : MonoBehaviour
         newPosition.z = newZCircle;
         log += $"\nnewPosition: {newPosition}";
 
-        /*
-        var curCameraPosition = Camera.main.transform.position;
-        log += $"\ncurCameraPosition: {curCameraPosition}";
-
-        var curCameraRotation = Camera.main.transform.rotation;
-        log += $"\ncurCameraRotation: {curCameraRotation}";
-        Vector3 cameraForward = curCameraRotation * Vector3.forward;
-
-        var newPosPlusCam = newPosition + curCameraPosition;
-        log += $"\nnewPosition +camPos: {newPosPlusCam}";
-
-        var newPosPlusCamTimesRot = cameraForward + newPosPlusCam;
-        log += $"\nnewPosition +camPos * camRot: {newPosPlusCamTimesRot}";
-
-        newPosPlusCamTimesRot.z = newZCircle;
-        */
-
-        /*
-        // If the Camera (Head) rotates, the InforBox needs to be "on the other side"
-        if (curCameraRotation.z < 0)
-        {
-            newPosPlusCamTimesRot.z = -newZCircle;
-        }
-        newPosPlusCam.z = newZCircle;
-        //*/
-
         log += "\n--- CalculatePositionFromAngle --- end ---";
         Debug.Log(log);
         return newPosition;
@@ -277,53 +204,24 @@ public class PositionHandler : MonoBehaviour
         var zs = new[] {newOffsetFromRayCenter.z, newOffsetFromRayTopLeft.z, NewOffsetFromRayBottomRight.z,
             newOffsetFromRayTopRight.z, newOffsetFromRayBottomLeft.z};
         float closestZ = zs.Where(z => z != 0).DefaultIfEmpty().Min();
-        // var closestZ = Mathf.Min(newOffsetFromRayCenter.z, newOffsetFromRayTopLeft.z, NewOffsetFromRayBottomRight.z, newOffsetFromRayTopRight.z, newOffsetFromRayBottomLeft.z);
+        
 
         var bboxHeight = Mathf.Abs(maxY - minY);
         log += $"\nbboxHeight: {bboxHeight}";
 
 
-
-        // keep the InfoBox at least 0.5m away from the user
-        //closestZ += 0.2f;
+        // keep the InfoBox at least 0.7m away from the user
         closestZ = (closestZ <= 0.7f) ? 0.7f : closestZ;
 
         // +(bboxHeight / 2)
         var newLocalOffset = new Vector3(meanX, maxY + bboxHeight / 2, closestZ);
         log += $"\nnewLocalOffset: {meanX}, {maxY}, {closestZ}";
         log += $"\nnewLocalOffset + y-bbox: {newLocalOffset}";
-      
-        // Vector3.Distance(curLocalOffset, newLocalOffset) > 0.1 &&
-        //if (!zHasChangedMuch)
-        //{
-
-        // save new Offset
-        //LastYoloOffset = (newLocalOffset, LastYoloUpdate);
-        //ThunderboardInfoBox.SetActive(true);
-        // Last5YoloOffsets.Add(newLocalOffset);
-
-
-
 
         log += $"\n--- CalculateNewOffsetFromYolo --- end ---";
         Debug.Log(log);
 
         return newLocalOffset;
-
-        // PositionHandler.UpdateLocalOffsetStaticObject(this, orbital, billboard); 
-
-        // call function to apply the new offset
-        //PositionHandler.UpdateLocalOffsetSensorFusion(this, orbital, billboard, radialView);
-
-        //StartCoroutine(PositionHandler.MoveLocalOffset(orbital, curLocalOffset, newLocalOffset, billboard));
-        //LastYoloUpdate = DateTime.UtcNow;
-        //}
-        //}
-
-
-
-
-
     }
 
     /// <summary>
@@ -334,71 +232,6 @@ public class PositionHandler : MonoBehaviour
     public Vector3 ScreenToCameraPointThroughRaycast(Vector2 newPos, string label = "")
     {
         string log = "--- ScreenToCameraPointThroughRaycast ---";
-
-        /* ----------------- ↓ PROBABLY NOT needed anymore ↓ ------------------------------- */
-        /*
-        var cameraTransform = Camera.main.transform;
-       
-
-        //1280x720
-        // following this paper "Augmented Reality Controlled Smart Wheelchair Using Dynamic Signifiers for Affordance Representation"
-        // chacon-quesada2019
-        // https://doi.org/10.1109/IROS40897.2019.8968290
-        var newX = (2 * newPos.x / 1280f) - 1;
-        var newY = (-2 * newPos.y / 720) + 1;
-        // pixel in normalised device coordinates (ndc)
-        var pndc = new Vector4(newX, newY, 1, 1);
-        log += $"\nin normalised device coordinates: {pndc}";
-        var Mproj = Camera.main.projectionMatrix;
-
-        // position in the camera coordinate system
-        //var pc =  Mproj.inverse.MultiplyVector(pndc);
-        var Mproji = Mproj.inverse;
-        var pc = Mproji.MultiplyPoint(pndc);
-        log += $"\nin camera coordinates: {pc}";
-
-        var Mworld = Camera.main.cameraToWorldMatrix;
-        // position in application coordinate system (aka world coordinates)
-        var pworld = Mworld.MultiplyPoint(pc);
-        log += $"\nin app coordinates: {pworld}";
-
-        // position of the camera in the camera coordinate system
-        var ocam = new Vector4(0, 0, 0, 1);
-        // position of the camera in the world coordinate system
-        var oworld = Mworld.MultiplyPoint(ocam);
-        log += $"\norigin in world coordinates: {oworld}";
-
-
-
-        Vector3 newPosinWorldCoord = Camera.main.ScreenToWorldPoint(newPos);
-        log += $"\nresult from ScreenToWorldPoint: {newPosinWorldCoord}";
-
-
-        var curCameraPosition = Camera.main.transform.position;
-        log += $"\ncurCameraPosition: {curCameraPosition}";
-
-        var plusCamPos = newPosinWorldCoord + curCameraPosition;
-        log += $"\nplusCamPos: {plusCamPos}";
-
-
-
-        Vector3 raycastDirection = new Vector3(0, 0, 0);
-        if (thunderboardHandlerList.pointMode == "app")
-        {
-            raycastDirection = pworld;
-        }
-        else if (thunderboardHandlerList.pointMode == "cameraPos")
-        {
-            raycastDirection = plusCamPos;
-        }
-        else
-        {
-            raycastDirection = newPosinWorldCoord;
-        }
-        //log += $"\nraycastStart: {raycastDirection}";
-        //*/
-        /* ----------------- ↑ PROBABLY NOT needed anymore ↑ ------------------------------- */
-
 
         /* ----------------- ↓ ALL WE need ↓ ------------------------------- */
 
@@ -413,12 +246,6 @@ public class PositionHandler : MonoBehaviour
         var newViewportPos = HL2Camera.ScreenToViewportPoint(newPosYFlipped);
         log += $"\nnewWorldPos HL2camera: {newWorldPos}";
         log += $"\nnewViewportPos HL2camera: {newViewportPos}";
-        //Debug.DrawRay(oworld, raycastDirection);
-        //if (Physics.Raycast(oworld, raycastDirection, out RaycastHit hit))
-        //if (Physics.Raycast(raycastDirection, oworld, out RaycastHit hit))
-        //if (Physics.Raycast(raycastStart, cameraTransform.forward, out RaycastHit hit))
-        //if (Physics.Raycast(pworld, tc.TransformDirection(Vector3.forward), out RaycastHit hit))
-        //if (Physics.Raycast(pworld, Vector3.forward, out RaycastHit hit))
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
             // we need the hitpoint in local camera space, to set the local offset of the hologram relative to the user's head
@@ -426,6 +253,7 @@ public class PositionHandler : MonoBehaviour
             log += $"\nhit point: {hit.point}";
             log += $"\nnewInCamLocalSpace: {newInCamLocalSpace}";
             log += "\n--- ScreenToWorldPointRaycast --- end ---";
+            // if  a label is set, create boxes where the raycast hit.point is
             if (label != "")
             {
                 //CreateBBoxCorner(newInCamLocalSpace, label);
@@ -433,8 +261,6 @@ public class PositionHandler : MonoBehaviour
             }
             
             Debug.Log(log);
-            
-            //var newVector = new Vector3(newWorldPos.x, newWorldPos.y, hit.point.z);
             return newInCamLocalSpace;
         }
     
@@ -442,8 +268,6 @@ public class PositionHandler : MonoBehaviour
         Debug.Log(log);
 
         // fallback if ray doesn't hit anthing
-        //var newWorldInCamLocalSpace = HL2Camera.transform.InverseTransformPoint(newWorldPos);
-        //return newWorldInCamLocalSpace;
         return new Vector3(0, 0, 0);
 
     }
@@ -585,14 +409,12 @@ public class PositionHandler : MonoBehaviour
             var yInterpolated = Mathf.Lerp(lastYoloOffset.z, lastAoAOffset.z, LerpBetweenYoloAndAoAOffset);
             newZOffset = yInterpolated;
             log += $"\ninterpolated, x: {xInterpolated}, y: {yInterpolated}";
-            // } else if (lastYoloTimeDiffs && (lastAoAReceivedTimeDiffSeconds > MaxSecondsSinceLastUpdate) )
         } else if ((lastYoloReceivedTimeDiffSeconds < MaxSecondsSinceLastUpdate) && (lastAoAReceivedTimeDiffSeconds > MaxSecondsSinceLastUpdate))
         {
             log += "\nUpdating offset from Yolo";
             newXOffset = lastYoloOffset.x;
             newYOffset = lastYoloOffset.y;
             newZOffset = lastYoloOffset.z;
-        // } else if ((lastYoloReceivedTimeDiffSeconds > MaxSecondsSinceLastUpdate) && lastAoATimeDiffs)
         } else if ((lastYoloReceivedTimeDiffSeconds > MaxSecondsSinceLastUpdate) && (lastAoAReceivedTimeDiffSeconds<MaxSecondsSinceLastUpdate))
         {
             log += "\nUpdating offset from AoA";
@@ -607,29 +429,9 @@ public class PositionHandler : MonoBehaviour
             return;
         }
 
-
-
-
         var newOffset = new Vector3(newXOffset, newYOffset, newZOffset);
         newOffset.z = (newOffset.z < 0.5f) ? 0.5f : newOffset.z;
         log += $"\nnewOffset: {newOffset}";
-
-        /*
-        // if another TBH is already at the same position, move the new TBH a bit away
-        // to not let them overlap
-        var closestTBH = thunderboardHandlerList.GetClosestTBHForNewAoA(newOffset, 1f);
-        if (closestTBH != null)
-        {
-            var closestPos = TBsCurrentPositionInCameraSpace(closestTBH);
-
-            if (closestPos.z - newOffset.z < 0.1)
-            {
-                newOffset.z = closestPos.z + 0.1f;
-            }
-        }
-        //*/
-       
-
         if (newOffset.sqrMagnitude == 0)
         {
             log += "\nnewOffset's length is 0 aka position (0,0,0). Not continuing.";
@@ -639,9 +441,6 @@ public class PositionHandler : MonoBehaviour
 
 
         // ---- SPATIAL THRESHOLD ---
-
-        // var offsetDiff = Vector3.Distance(curOffset, newOffset);
-
         // the new offset vector needs to be at least 0.2*0.2 different to the current offset vector
         Vector3 offsetDiff = curOffset - newOffset;
         float sqrLen = offsetDiff.sqrMagnitude;
@@ -650,35 +449,12 @@ public class PositionHandler : MonoBehaviour
         //if (offsetDiff > 0.2f)
         if (sqrLen > MinDiffToLastOffset)
         {
-            /*
-            // keep newOffset within user's view frustum
-            orbital.UpdateLinkedTransform = true;
-            orbital.LocalOffset = newOffset;
-            // orbital.UpdateWorkingToGoal();
-            radialView.UpdateLinkedTransform = true;
-            // radialView.UpdateWorkingToGoal();
-            var radialGoal = radialView.GetComponent<SolverHandler>().GoalPosition;
-            log += $"\nRadialGoal: {radialGoal.x}, {radialGoal.y}, {radialGoal.z}";
-            var goalPositionInCamSpace = HL2Camera.transform.InverseTransformPoint(radialGoal);
-            log += $"\ngoalPositionInCamSpace: {goalPositionInCamSpace.x}, {goalPositionInCamSpace.y}, {goalPositionInCamSpace.z}";
-
-            //newOffset.x = (newOffset.x != radialGoal.x) ? radialGoal.x : newOffset.x;
-            // newOffset.y = (newOffset.y != radialGoal.y) ? radialGoal.y : newOffset.y;
-
-            orbital.LocalOffset = curOffset;
-            //orbital.UpdateWorkingToGoal();
-            orbital.UpdateLinkedTransform = false;
-            //*/
-
-            //newOffset.z = (newOffset.z < 0.7f) ? 0.7f : newOffset.z;
             log += "\nOffset has changed enough. Updating.";
             StartCoroutine(MoveLocalOffset(orbital, curOffset, newOffset, billboard));
             tbh.ThunderboardInfoBox.SetActive(true);
             tbh.TBCurrentLocalOffsetInWorld = newOffset;
             tbh.SetOffsetText();
             tbh.SetAngleText();
-          
-           
         } else
         {
             log += "\nOffset has not changed enough. Not updating.";
@@ -695,16 +471,21 @@ public class PositionHandler : MonoBehaviour
     {
         _positionIsChangingRightNow = true;
         float t = 0f;
-        //Debug.Log("in move");
+        Debug.Log("in move");
+        Debug.Log($"before move: orbital from: {from}");
+        Debug.Log($"before move: orbital to: {to}");
         while (t < 1f)
         {
-            t += 3f * Time.deltaTime;
+            t += Time.deltaTime;
             orbital.LocalOffset = Vector3.Lerp(from, to, Mathf.SmoothStep(0f, 1f, t));
             yield return null;
         }
         billboard.enabled = true;
         _positionIsChangingRightNow = false;
         orbital.enabled = false;
+        
+        Debug.Log($"after move: orbital localOffset: {orbital.LocalOffset}");
+        
         _lastOffsetUpdateTime = DateTime.UtcNow;
     }
 

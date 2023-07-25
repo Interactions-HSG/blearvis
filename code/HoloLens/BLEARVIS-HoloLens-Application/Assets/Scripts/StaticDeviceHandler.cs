@@ -48,20 +48,6 @@ public class StaticDeviceHandler : MonoBehaviour
             // display warning message
             NewTBHfromYoloWasSuccessful = true; 
         }
-
-        /*
-        if (NewPositionSuccessful)
-        {
-            ThunderboardHandlerList.handleIncomingYoloResult = false;
-            ThunderboardHandlerList.handleIncomingAoAResult = false;
-            ProgressIndicator.SetActive(false);
-            ProgressIndicator.GetComponent<ProgressIndicatorObjectDisplay>().enabled = false;
-            RedoAddDeviceText.SetActive(true);
-            ButtonRedoAddDevice.SetActive(true);
-            ButtonConfirm.SetActive(true);
-            
-        }
-        //*/
         
     }
 
@@ -87,10 +73,19 @@ public class StaticDeviceHandler : MonoBehaviour
         {
             
             var lastTBH = ThunderboardHandlerList.thunderboardHandlerList.Last();
-            var infoPanel = lastTBH.ThunderboardInfoBox;
-            infoPanel.SetActive(false);
-            Destroy(infoPanel);
+            var infoBox = lastTBH.ThunderboardInfoBox;
+            infoBox.SetActive(false);
+            Destroy(infoBox);
             ThunderboardHandlerList.thunderboardHandlerList.Remove(lastTBH); 
+            if (ThunderboardHandlerList.expectingMultipleThings)
+            {
+                // remove also the second last added thing
+                lastTBH = ThunderboardHandlerList.thunderboardHandlerList.Last();
+                infoBox = lastTBH.ThunderboardInfoBox;
+                infoBox.SetActive(false);
+                Destroy(infoBox);
+                ThunderboardHandlerList.thunderboardHandlerList.Remove(lastTBH);
+            }
         }
 
         // turn on 
@@ -118,20 +113,9 @@ public class StaticDeviceHandler : MonoBehaviour
         PositionHandler.RaycastCounter = 0;
 
         Debug.Log(log);
-        // for Yolo
-        // - take the first incoming bounding box
-        // - raycast etc
-        // - turn yolo off
-
-
-        // for MQTT 
-        // - take first 10 (?) values? 
-        // - average them
-        // - calc positions etc
-        // - then turn it off
-
 
     }
+
     private Vector3 AverageOfVector3List(List<Vector3> list)
     {
         return new Vector3(
@@ -188,35 +172,6 @@ public class StaticDeviceHandler : MonoBehaviour
             }
         }
 
-
-        /*
-        if (currentDistance > MaxDistanceToThing)
-        {
-            listForFirstThing.Add(list[0]);
-            listForSecondThing.Add(list[1]);
-        } else
-        {
-            listForFirstThing.Add(list[0]);
-            listForFirstThing.Add(list[1]);
-        }
-
-        for (int i = 2; i < list.Count-1; i++)
-        {
-            var distToFirstThing = (AverageOfVector3List(listForFirstThing) - list[i]).sqrMagnitude;
-            log += $"distToFirstThing: {distToFirstThing}";
-            var distToSecondThing = (AverageOfVector3List(listForSecondThing) - list[i]).sqrMagnitude;
-            log += $"distToSecondThing: {distToSecondThing}";
-
-            if (distToFirstThing < distToSecondThing && distToFirstThing < MaxDistanceToThing)
-            {
-                listForFirstThing.Add(list[i]);
-            }
-            else
-            {
-                listForSecondThing.Add(list[i]);
-            }
-        }
-        // */
         Debug.Log(log);
         var lists = new List<List<Vector3>> { listForFirstThing, listForSecondThing };
         return (uri, lists);
@@ -230,14 +185,18 @@ public class StaticDeviceHandler : MonoBehaviour
         var tbh = newPrefabInstance.GetComponent<ThunderboardHandler>();
 
         tbh.SerialNumber = ThunderboardHandlerList.thunderboardHandlerList.Count + 1;
-        tbh.SetSerialNumberText();
-        tbh.ThunderboardInfoBox.SetActive(false);
+        // tbh.SetSerialNumberText();
+        tbh.ThunderboardInfoBox.SetActive(true);
         ThunderboardHandlerList.thunderboardHandlerList.Add(tbh);
         
         ThunderboardHandlerList.tbhCounter++;
         return tbh;
     }
 
+    /// <summary>
+    /// For new incoming values separate the vectors in 1 or 2 devices, 
+    /// then calculate the position of the MR panel(s).
+    /// </summary>
     public void SetTBPositionForStaticDevices()
     {
 
@@ -258,33 +217,11 @@ public class StaticDeviceHandler : MonoBehaviour
         var dictOfAoaOffsetLists = ThunderboardHandlerList.DictOfAoaOffsetLists;
         var dictOfYoloOffsetLists = ThunderboardHandlerList.DictOfYoloOffsetLists;
 
-        /*
-        foreach (var item in offsetList)
-        {
-            if (item.idORuri.StartsWith("http"))
-            {
-                uri = item.idORuri;
-                yoloOffsetList.Add((uri, item.offset));
-            }
-            else
-            {
-                id = item.idORuri;
-                aoaOffsetList.Add((uri, item.offset));
-                log += $"\nitem offset: {item.offset}";
-            }
-        }
-        //*/
-
-        
-
-
-
         var lastYoloOffset = new Vector3(0, 0, 0);
         var dictOfAVERAGEAoaOffsetLists = new Dictionary<string, Vector3>();
         var dictOfAVERAGEYoloOffsetLists = new Dictionary<string, Vector3>();
 
         // for yolo: 
-        // TODO:
         // - each class: see if points come from multiple devices BEFORE averaging
         // - see how many devices are in scene, only if there are 2 do this
 
@@ -362,8 +299,8 @@ public class StaticDeviceHandler : MonoBehaviour
 
         if (ThunderboardHandlerList.expectingMultipleThings)
         {
-            // IF there are multiple objects in the scene
-            // We assume there are two objects in the scene.
+            // IF there are multiple objects (n=2) in the scene,
+            // we assume there are two objects in the scene.
             log += $"\n multiple things in scene -> now creating TBHs";
             var firstYoloURI = "";
             var firstYoloAvgOffset = new Vector3(0,0,0);
@@ -468,35 +405,54 @@ public class StaticDeviceHandler : MonoBehaviour
                     continue;
                 }
                 log += $"\nnewOffset: {newOffset}";
+                log += $"\ntbh.ThunderboardID: {tbh.ThunderboardID}";
 
-                if (id != "")
+                if (tbh.ThunderboardID != "")
                 {
                     if (ThunderboardHandlerList.thunderboardHandlerList.Count == 1)
                     {
                         ThunderboardHandlerList.MACofFirstBLETag = id;
                         log += $"\nThunderboardHandlerList.MACofFirstBLETag: {ThunderboardHandlerList.MACofFirstBLETag}";
                     }
-                    if (id == "60A423C98BF1")
+                    if (tbh.ThunderboardID == "60A423C98BF1")
+                    {
+                        // Spock
+                        tbh.thingIP = "10.2.2.157";
+                        log += $"\nid: {id} and ip: {tbh.thingIP}";
+                    }
+                    else if (tbh.ThunderboardID == "588E81440788")
                     {
                         tbh.thingIP = "10.2.2.240";
+                        log += $"\nid: {id} and ip: {tbh.thingIP}";
                     }
-
-                    tbh.GetDataFromThing = true;
-                    tbh.GetDataFromThingCourutineRunning = true;
-                    tbh.SetIDText();
+                    log += $"\nip: {tbh.thingIP}";
+                    tbh.ThingHandler.StartGettingDataFromThingStarter(tbh);
                 }
 
-               
+                tbh.SetIDText();
                 tbh.SetThingURIText();
-
-                tbh.ThunderboardInfoBox.GetComponent<Billboard>().enabled = false;
-                tbh.ThunderboardInfoBox.GetComponent<Orbital>().enabled = true;
-                tbh.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset = newOffset;
+                var orbital = tbh.ThunderboardInfoBox.GetComponent<Orbital>();
+                var billboard = tbh.ThunderboardInfoBox.GetComponent<Billboard>();
+                billboard.enabled = false;
+                orbital.enabled = true;
+                newOffset.z = (newOffset.z < 0.5f) ? 0.5f : newOffset.z;
+                var curOffset = tbh.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset;
+                log += "\nabout to move orbital offset";
+                log += $"\nOrbital status before: {orbital.isActiveAndEnabled}";
+                StartCoroutine(PositionHandler.MoveLocalOffset(orbital, curOffset, newOffset, billboard));
+                log += $"\nOrbital status after: {orbital.isActiveAndEnabled}";
+                if (orbital.LocalOffset == new Vector3(0,0,0) || orbital.LocalOffset == curOffset)
+                {
+                    log += "\ncorrected offset";
+                    orbital.enabled = true;
+                    orbital.LocalOffset = newOffset;
+                    orbital.enabled = false;
+                }
+               
+                tbh.TBCurrentLocalOffsetInWorld = newOffset;
                 tbh.ThunderboardInfoBox.SetActive(true);
 
                 tbh.ThunderboardInfoBox.GetComponent<Billboard>().enabled = true;
-               
-                // StartCoroutine(PositionHandler.MoveLocalOffset(orbital, curOffset, newOffset, billboard));
 
                 tbh.TBCurrentLocalOffsetInWorld = newOffset;
                 tbh.SetOffsetText();
@@ -536,7 +492,7 @@ public class StaticDeviceHandler : MonoBehaviour
             tbh.ThingURI = uri;
             tbh.ThunderboardID = id;
 
-            if (id != "")
+            if (tbh.ThunderboardID != "")
             {
                 if (ThunderboardHandlerList.thunderboardHandlerList.Count == 1)
                 {
@@ -545,20 +501,29 @@ public class StaticDeviceHandler : MonoBehaviour
                 }
                 if (id == "60A423C98BF1")
                 {
+                    tbh.thingIP = "10.2.2.157";
+                    log += $"id: {id} and ip: {tbh.thingIP}";
+                } else if (id == "588E81440788")
+                {
                     tbh.thingIP = "10.2.2.240";
+                    log += $"id: {id} and ip: {tbh.thingIP}";
                 }
 
-                tbh.GetDataFromThing = true;
-                tbh.GetDataFromThingCourutineRunning = true;
+                StartCoroutine(StartGettingDataFromThingStaticDevice(tbh));
 
             }
-
             tbh.SetIDText();
+
             tbh.SetThingURIText();
 
-            tbh.ThunderboardInfoBox.GetComponent<Billboard>().enabled = false;
-
-            tbh.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset = newOffset;
+            var orbital = tbh.ThunderboardInfoBox.GetComponent<Orbital>();
+            var billboard = tbh.ThunderboardInfoBox.GetComponent<Billboard>();
+            billboard.enabled = false;
+            orbital.enabled = true;
+            newOffset.z = (newOffset.z < 0.5f) ? 0.5f : newOffset.z;
+            var curOffset = tbh.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset;
+            log += $"curOffset: {curOffset}";
+            StartCoroutine(PositionHandler.MoveLocalOffset(orbital, curOffset, newOffset, billboard));
             tbh.ThunderboardInfoBox.SetActive(true);
 
             tbh.ThunderboardInfoBox.GetComponent<Billboard>().enabled = true;
@@ -571,110 +536,18 @@ public class StaticDeviceHandler : MonoBehaviour
 
 
         }
-
-
-            /*
-             * // -------------------- MAYBE NEEDED ??? -----------
-             * 
-            Vector3 newOffset = new Vector3();
-
-            if (dictOfAVERAGEAoaOffsetLists.Count > 0 && aoaOffsetListContainsElements)
-            {
-                newOffset = new Vector3(Mathf.Lerp(avgYoloOffset.x, avgAoAOffset.x, 0.3f), avgYoloOffset.y, Mathf.Lerp(avgYoloOffset.z, avgAoAOffset.z, 0.3f));
-            }
-            else if (yoloOffsetListContainsElements && !aoaOffsetListContainsElements)
-            {
-                newOffset = avgYoloOffset;
-                /*
-                if (Vector3.Distance(lastYoloOffset, avgYoloOffset) > 0.5)
-                {
-                    newOffset = lastYoloOffset;
-                } else
-                {
-                    newOffset = avgYoloOffset;
-                }
-                ///
-
-                // 
-            }
-            else if (!yoloOffsetListContainsElements && aoaOffsetListContainsElements)
-            {
-                newOffset = avgAoAOffset;
-            }
-
-            log += $"\nnewOffset: {newOffset}";
-            log += $"\navgYoloOffset: {avgYoloOffset}";
-            log += $"\nlastYoloOffset: {lastYoloOffset}";
-            */
-            // --------------------
-
-
-
             log += $"\ncreating TBH.";
-
-        // newTBH.ThunderboardID = "undefined";
-        // var newOffset = Vector3.Lerp(bBoxCameraSpaceTL, bBoxCameraSpaceBR, 0.5f);
-        // newOffset.z = (newOffset.z < 0.5f) ? 0.5f : newOffset.z;
-        // matchingTBH.ThunderboardInfoBox.GetComponent<Orbital>().LocalOffset = newOffset;
-
-        // log += $"\nmatchingTBH ID: {matchingTBH.ThunderboardID}";
-        //log += $"\nmatchingTBH URI: {matchingTBH.ThingURI}";
-
-
-
-        /*
-        if (ThunderboardHandlerList.ListOfCurrentNewAoAs.Count >0)
-        {           
-            var angleSum = 0f;
-            foreach (var item in ThunderboardHandlerList.ListOfCurrentNewAoAs)
-            {
-                angleSum += item.aoa;
-            }
-            var avgAngle = angleSum/ ThunderboardHandlerList.ListOfCurrentNewAoAs.Count;
-            log += $"\navgAngle: {avgAngle}";
-
-            var offsetFromAvgAngle = PositionHandler.CalculateLocalOffsetFromAngle(avgAngle);
-            log += $"\noffsetFromAvgAngle: {offsetFromAvgAngle}";
-
-            tbh.AngleOfArrival = avgAngle;
-            tbh.SetAngleText();
-
-        }
-        //*/
-
-
-
-
-
-
-
-
-
-        /*
-        var yoloOffsetListContainsElements = yoloOffsetList.Any(i => i.offset != null);
-
-        if (yoloOffsetListContainsElements)
-        {
-            avgYoloOffset = new Vector3(
-              yoloOffsetList.Average(x => x.offset.x),
-              yoloOffsetList.Average(x => x.offset.y),
-              yoloOffsetList.Average(x => x.offset.z));
-             yoloOffsetList.Last();
-        }
-        //*/
-
 
         AfterNewPositionSuccessful();
 
-
-
-
-
         Debug.Log(log);
-
-
     }
 
+    /// <summary>
+    /// Gets data continuously from a Thing using the Thing's URL
+    /// </summary>
+    /// <param name="tbh">The TBH associated with the Thing</param>
+    /// <returns></returns>
     IEnumerator StartGettingDataFromThingStaticDevice(ThunderboardHandler tbh)
     {
         if (tbh.thingIP == "")
@@ -688,11 +561,18 @@ public class StaticDeviceHandler : MonoBehaviour
             tbh.GetDataFromThingCourutineRunning = true;
             Task task = ThingHandler.GetBatteryVoltageFromThing(tbh.thingIP, tbh);
             Task task2 = ThingHandler.GetSoilconditionFromThing(tbh.thingIP, tbh);
-            yield return new WaitUntil(() => task.IsCompleted && task2.IsCompleted);
+            Task task3 = ThingHandler.GetWaterLevelFromThing(tbh.thingIP, tbh);
+            yield return new WaitUntil(() => task.IsCompleted && task2.IsCompleted && task3.IsCompleted);
             if (tbh.BatteryVoltage != 0f)
             {
                 Debug.Log("new battery voltage");
                 tbh.SetBatteryVoltageText();
+                tbh.TractorInfo.SetActive(true);
+            }
+            if (tbh.WaterLevel != 0f)
+            {
+                Debug.Log("new water level");
+                tbh.WaterText.SetActive(true);
                 tbh.TractorInfo.SetActive(true);
             }
 

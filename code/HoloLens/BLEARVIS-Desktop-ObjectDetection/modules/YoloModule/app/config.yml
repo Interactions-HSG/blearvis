@@ -1,0 +1,30 @@
+---
+# if we want to use our own custom model
+CUSTOM: True
+CUSTOM_CLASSES:
+ - tractorbot
+ - roboticarm
+
+
+# if model is YOLO, delect if tiny version should be used which achieves around 30 frames per second on CPU
+USE_YOLO-TINY: False
+# the path to the HoloLens camera
+VIDEO_SOURCE: https://<DEVICE-PORTAL-USER>:<DEVICE-PORTAL-PWD>@<HOLOLENS-IP>/api/holographic/stream/live.mp4?holo=true&pv=true&mic=true&loopback=true&pv=true 
+
+# for testing it is maybe easier to use the webcam to detect some objects
+USE_WEBCAM: False
+# if we want to do object recognition
+RUN_INFERENCE: True
+# the minimum confidence level to say it is a valid detection
+MIN_CONFIDENCE_LEVEL: 0.7
+# minimum time in seconds a thing must be in the screen so that we display any recommendations
+MIN_TIME: 0.5
+# if we want to record the detections in a video by drawing rectangle boxes and assigning confidence values
+SHOW_OUTPUT: True
+# Path were the output video should be saved (as .avi)
+RESULT_PATH: /Users/username/Videos
+# if HTTP request should be sent to an endpoint (usally a Microsoft Hololens) everytime a new object appears in the users field of view
+HOLO_ENDPOINT: True
+# the endpoint of the Microsoft Hololens or any other endpoint, where the HL2's IP should be set instead of 0.0.0.0 
+# the port number should correspond to the one set in the Unity app in HTTPListener.cs
+HOLO_ENDPOINT_URL: http://0.0.0.0:5555 

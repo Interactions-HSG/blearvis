@@ -4,18 +4,16 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using UnityEngine;
+using static UnityEngine.XR.ARSubsystems.XRCpuImage;
 
 public class HTTPListener : MonoBehaviour
 {
 
     private HttpListener listener;
     private Thread listenerThread;
-    //public ThunderboardHandler thunderboardHandler;
     public ThunderboardHandlerList ThunderboardHandlerList;
     public PositionHandler PositionHandler;
     public StaticDeviceHandler StaticDeviceHandler;
-
-
 
     void Start()
     {
@@ -24,18 +22,16 @@ public class HTTPListener : MonoBehaviour
         listener = new HttpListener();
 
         var ip = GetIP4Address();
-        //listener.Prefixes.Add("http://10.2.1.85:5050/"); // labnet lab
-        // listener.Prefixes.Add("http://10.2.2.172:5050/"); // labnet office
-        listener.Prefixes.Add($"http://{ip}:6060/"); // labnet office
-        //listener.Prefixes.Add("http://10.2.2.167:5050/"); // labnet office
-        //listener.Prefixes.Add("http://localhost:5050/"); // labnet office
+        // MAKE SURE that the port number here corresponds to the port number 
+        // in  code/HoloLens/BLEARVIS-Desktop-ObjectDetection/modules/YoloModule/app/config.yaml: HOLO_ENDPOINT_URL
+        listener.Prefixes.Add($"http://{ip}:8090/");
 
         listener.AuthenticationSchemes = AuthenticationSchemes.Anonymous;
         listener.Start();
 
         listenerThread = new Thread(StartListener);
         listenerThread.Start();
-        Debug.Log($"Server Started listening at http://{ip}:6060/");
+        Debug.Log($"Server Started listening at http://{ip}:8090/");
 
         // there is only one thunderboardHandlerListScript in the scene
         if (ThunderboardHandlerList == null)
@@ -90,19 +86,7 @@ public class HTTPListener : MonoBehaviour
             Debug.Log($"key: {firstKey}");
             Debug.Log($"value: {firstValue}");
 
-            /*
-            if (key.StartsWith("coord"))
-            {
-                Debug.Log($"is coordinate");
-            }
-            */
-            //if (key.StartsWith("https://interactions"))
-            //{
-            // https://blarvis.interactions.ics.unisg.ch/card
-            // https://blarvis.interactions.ics.unisg.ch/lamp
-            // https://blarvis.interactions.ics.unisg.ch/mac
-            // if (firstKey.StartsWith("https://interactions") && firstValue == "1" && ThunderboardHandlerList.handleIncomingYoloResult)
-            if (firstKey.StartsWith("https://interactions") && firstValue == "1" && ThunderboardHandlerList.handleIncomingYoloResult)
+            if ((firstKey.StartsWith("robot") || firstKey.StartsWith("tractor")) && firstValue == "1" && ThunderboardHandlerList.handleIncomingYoloResult)
             {
                 var bBoxCoordTLx = int.Parse(context.Request.QueryString["coordTLx"]);  // top left x-value
                 var bBoxCoordTLy = int.Parse(context.Request.QueryString["coordTLy"]);
@@ -134,8 +118,6 @@ public class HTTPListener : MonoBehaviour
                 PositionHandler.YoloFrameHeight = frameHeight;
                 PositionHandler.NewYoloFrameDimensions = true;
             }
-
-            //}
         }
         context.Response.Close();
     }
