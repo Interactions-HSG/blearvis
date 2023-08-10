@@ -21,8 +21,18 @@ All source code used to run the BLEARVIS prototype is in the `code` folder. See 
 - [code/HoloLens/BLEARVIS-HoloLens-Application](https://github.com/Interactions-HSG/blearvis/tree/main/code/HoloLens/BLEARVIS-HoloLens-Application) contains the app for the HL2 that is build with Unity.
 - [code/SiLabs](https://github.com/Interactions-HSG/blearvis/tree/main/code/SiLabs) contains the code for the BLE sensor tag, the antenna array and the host device.
 
+## 📹 Teaser Video
+This video very briefly introduces the main contribution of BLEARVIS:
+
+https://github.com/Interactions-HSG/blearvis/assets/11094168/78196c66-dc23-4ae6-a4a3-1848d5431f3b
+
+
+
 ## 📹 Demo Video
 This demo video shows how objects can be detected, identified and situated by BLEARVIS with its different modules. Then the object information is shown in MR:
+
+https://github.com/Interactions-HSG/blearvis/assets/11094168/81f15a94-6b31-4e6a-a91e-fa98a029dc64
+
 
 ## 📧 Contact
 
