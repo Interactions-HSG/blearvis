@@ -1,6 +1,6 @@
 # BLEARVIS prototype
 
-This repository contains the source code for the BLEARVIS prototype described in the publication:
+This repository contains the source code for the BLEARVIS prototype described in the publication (see the [PDF](https://github.com/Interactions-HSG/blearvis/blob/main/Strecker%20et%20al%20-%202023%20-%20MR%20Object%20Identification%20and%20Interaction.pdf) above):
 
 Jannis Strecker, Khakim Akhunov, Federico Carbone, Kimberly García, Kenan Bektaş, Andres Gomez, Simon Mayer, and Kasim Sinan Yildirim. 2023. **MR Object Identification and Interaction: Fusing Object Situation Information from Heterogeneous Sources.** Proc. ACM Interact. Mob. Wearable Ubiquitous Technol. 7, 3, Article 124 (September 2023), 26 pages. https://doi.org/10.1145/3610879
 
@@ -32,7 +32,6 @@ https://github.com/Interactions-HSG/blearvis/assets/11094168/78196c66-dc23-4ae6-
 This demo video shows how objects can be detected, identified and situated by BLEARVIS with its different modules. Then the object information is shown in MR:
 
 https://github.com/Interactions-HSG/blearvis/assets/11094168/81f15a94-6b31-4e6a-a91e-fa98a029dc64
-
 
 ## 📧 Contact
 
