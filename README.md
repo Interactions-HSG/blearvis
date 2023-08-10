@@ -30,7 +30,9 @@ https://github.com/Interactions-HSG/blearvis/assets/11094168/78196c66-dc23-4ae6-
 
 ## 📹 Demo Video
 This demo video shows how objects can be detected, identified and situated by BLEARVIS with its different modules. Then the object information is shown in MR:
-[will be added soon]
+
+https://github.com/Interactions-HSG/blearvis/assets/11094168/5e5c4a9d-7a6a-4b41-9291-d52ed772ddf4
+
 
 ## 📧 Contact
 
