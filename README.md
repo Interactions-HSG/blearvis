@@ -24,8 +24,9 @@ All source code used to run the BLEARVIS prototype is in the `code` folder. See 
 ## 📹 Teaser Video
 This video very briefly introduces the main contribution of BLEARVIS:
 
-https://github.com/Interactions-HSG/blearvis/assets/11094168/78196c66-dc23-4ae6-a4a3-1848d5431f3b
+(also available on YouTube: https://youtu.be/pmwpOFGvSwc?si=P09sHjYhLqgmn-1O)
 
+https://github.com/Interactions-HSG/blearvis/assets/11094168/78196c66-dc23-4ae6-a4a3-1848d5431f3b
 
 
 ## 📹 Demo Video
