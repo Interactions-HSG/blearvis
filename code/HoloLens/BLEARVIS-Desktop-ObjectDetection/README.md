@@ -14,6 +14,7 @@ The code is largely a combination of two repositories.
 ## Weights
 
 - Pre-trained weights for BLEARVIS: [./modules/YoloModule/app/detector/data/BLEARVIS_BestWeights_YOLOv7.onnx](https://github.com/Interactions-HSG/blearvis/tree/main/code/HoloLens/BLEARVIS-Desktop-ObjectDetection/modules/YoloModule/app/detector/data/BLEARVIS_BestWeights_YOLOv7.onnx) with the two robots (tractorbot and roboticarm).
+To download the weights, you need to use Git LFS (see [https://github.com/git-lfs/git-lfs/](https://github.com/git-lfs/git-lfs/)).
 
 ## Geeting Started
 
